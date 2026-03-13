@@ -1,0 +1,2089 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wolf Pack ETF 戰略儀表板 - Dashboard v5</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.1" integrity="sha384-jb8JQMbMoBUzgWatfe6COACi2ljcDdZQ2OxczGA3bGNeWe+6DChMTBJemed7ZnvJ" crossorigin="anonymous"></script>
+    <style>
+        :root {
+            --bg: #0f1117;
+            --card: #1a1d28;
+            --card-hover: #22263a;
+            --border: #2a2e3d;
+            --text: #e4e6eb;
+            --text-muted: #8b8fa3;
+            --accent: #4f8ef7;
+            --green: #00c48c;
+            --red: #ff4757;
+            --orange: #ffa502;
+            --yellow: #ffc312;
+            --purple: #a855f7;
+            --cyan: #22d3ee;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Noto Sans', sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+        }
+
+        /* Header */
+        header {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background-color: var(--card);
+            border-bottom: 1px solid var(--border);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        nav {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        nav button {
+            padding: 0.6rem 1.5rem;
+            border: none;
+            border-radius: 20px;
+            background-color: var(--border);
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+
+        nav button:hover {
+            background-color: var(--card-hover);
+            color: var(--text);
+        }
+
+        nav button.active {
+            background-color: var(--accent);
+            color: white;
+        }
+
+        /* Container */
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        /* Page */
+        .page {
+            display: none;
+        }
+
+        .page.active {
+            display: block;
+        }
+
+        /* Page Title */
+        .page-title {
+            font-size: 1.75rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            color: var(--text);
+        }
+
+        /* KPI Cards */
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .kpi-card {
+            background-color: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.5rem;
+            transition: all 0.3s ease;
+        }
+
+        .kpi-card:hover {
+            background-color: var(--card-hover);
+            border-color: var(--accent);
+        }
+
+        .kpi-label {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 0.5rem;
+        }
+
+        .kpi-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--accent);
+            margin-bottom: 0.25rem;
+        }
+
+        .kpi-subtext {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        /* Charts Grid */
+        .charts-row {
+            display: grid;
+            grid-template-columns: 3fr 2fr;
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .chart-container {
+            background-color: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.5rem;
+            min-height: 280px;
+        }
+
+        .chart-title {
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: var(--text);
+            margin-bottom: 1rem;
+        }
+
+        /* Responsive Grid */
+        @media (max-width: 1024px) {
+            .charts-row {
+                grid-template-columns: 1fr;
+            }
+
+            nav {
+                flex-wrap: wrap;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+
+            header {
+                padding: 1rem;
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            nav {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .kpi-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Tables */
+        .table-container {
+            background-color: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            overflow-x: auto;
+        }
+
+        .table-title {
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: var(--text);
+            margin-bottom: 1rem;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th {
+            background-color: rgba(42, 46, 61, 0.5);
+            padding: 1rem;
+            text-align: left;
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            border-bottom: 1px solid var(--border);
+            cursor: pointer;
+        }
+
+        th:hover {
+            background-color: rgba(42, 46, 61, 0.7);
+        }
+
+        td {
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid var(--border);
+            font-size: 0.9rem;
+        }
+
+        tr:hover {
+            background-color: rgba(79, 142, 247, 0.1);
+        }
+
+        /* Badges */
+        .badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .badge-red {
+            background-color: rgba(255, 71, 87, 0.15);
+            color: var(--red);
+        }
+
+        .badge-green {
+            background-color: rgba(0, 196, 140, 0.15);
+            color: var(--green);
+        }
+
+        .badge-yellow {
+            background-color: rgba(255, 195, 18, 0.15);
+            color: var(--yellow);
+        }
+
+        .badge-blue {
+            background-color: rgba(79, 142, 247, 0.15);
+            color: var(--accent);
+        }
+
+        .badge-purple {
+            background-color: rgba(168, 85, 247, 0.15);
+            color: var(--purple);
+        }
+
+        .badge-orange {
+            background-color: rgba(255, 165, 2, 0.15);
+            color: var(--orange);
+        }
+
+        /* Signal Cards */
+        .signal-card {
+            background-color: var(--card);
+            border: 1px solid var(--border);
+            border-left: 4px solid;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .signal-new {
+            border-left-color: var(--green);
+        }
+
+        .signal-add {
+            border-left-color: var(--accent);
+        }
+
+        .signal-reduce {
+            border-left-color: var(--orange);
+        }
+
+        .signal-exit {
+            border-left-color: var(--red);
+        }
+
+        .signal-title {
+            font-weight: 600;
+            color: var(--text);
+            margin-bottom: 0.25rem;
+        }
+
+        .signal-text {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        /* Mode Indicators */
+        .mode-indicator {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: white;
+            text-align: center;
+        }
+
+        .mode-high-defense {
+            background: linear-gradient(135deg, #ff4757 0%, #ff6b7a 100%);
+        }
+
+        .mode-defense {
+            background: linear-gradient(135deg, #ffa502 0%, #ffb520 100%);
+        }
+
+        .mode-neutral {
+            background: linear-gradient(135deg, #00c48c 0%, #1de9b6 100%);
+        }
+
+        .mode-attack {
+            background: linear-gradient(135deg, #4f8ef7 0%, #64b5f6 100%);
+        }
+
+        /* Tabs */
+        .tabs {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
+            border-bottom: 1px solid var(--border);
+            flex-wrap: wrap;
+        }
+
+        .tab-btn {
+            padding: 0.75rem 1.25rem;
+            border: none;
+            background: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            font-weight: 500;
+            border-bottom: 2px solid transparent;
+            transition: all 0.3s ease;
+        }
+
+        .tab-btn:hover {
+            color: var(--text);
+        }
+
+        .tab-btn.active {
+            color: var(--accent);
+            border-bottom-color: var(--accent);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Strategy Section */
+        .strategy-section {
+            background-color: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .highlight {
+            background-color: rgba(79, 142, 247, 0.15);
+            border-left: 4px solid var(--accent);
+            padding: 1rem;
+            border-radius: 4px;
+            margin-bottom: 1rem;
+            color: var(--text);
+        }
+
+        .warning {
+            background-color: rgba(255, 71, 87, 0.15);
+            border-left: 4px solid var(--red);
+            padding: 1rem;
+            border-radius: 4px;
+            margin-bottom: 1rem;
+            color: var(--text);
+        }
+
+        .tip {
+            background-color: rgba(0, 196, 140, 0.15);
+            border-left: 4px solid var(--green);
+            padding: 1rem;
+            border-radius: 4px;
+            margin-bottom: 1rem;
+            color: var(--text);
+        }
+
+        /* Filters */
+        .filter-buttons {
+            display: flex;
+            gap: 0.75rem;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .filter-btn {
+            padding: 0.5rem 1rem;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background-color: var(--card);
+            color: var(--text);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+
+        .filter-btn:hover {
+            background-color: var(--card-hover);
+            border-color: var(--accent);
+        }
+
+        .filter-btn.active {
+            background-color: var(--accent);
+            color: white;
+            border-color: var(--accent);
+        }
+
+        /* Gauge Container */
+        .gauge-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .gauge-card {
+            background-color: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.5rem;
+            text-align: center;
+        }
+
+        .gauge-title {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            margin-bottom: 1rem;
+        }
+
+        .gauge-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.75rem;
+        }
+
+        /* Trading View Widget */
+        .tradingview-widget-container {
+            width: 100%;
+            min-height: 280px;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        /* Comparison Tool */
+        .comparison-tool {
+            background-color: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .comparison-controls {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .comparison-select {
+            padding: 0.75rem;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background-color: var(--card);
+            color: var(--text);
+            cursor: pointer;
+        }
+
+        .comparison-btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            background-color: var(--accent);
+            color: white;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .comparison-btn:hover {
+            background-color: #3d72d9;
+        }
+
+        .comparison-result {
+            display: none;
+        }
+
+        .comparison-result.show {
+            display: block;
+        }
+
+        /* Delta Values */
+        .delta-up {
+            color: var(--green);
+            font-weight: 600;
+        }
+
+        .delta-down {
+            color: var(--red);
+            font-weight: 600;
+        }
+
+        /* Loading State */
+        .loading {
+            text-align: center;
+            padding: 2rem;
+            color: var(--text-muted);
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 40px;
+            height: 40px;
+            border: 4px solid var(--border);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Text Alignments */
+        .text-right {
+            text-align: right;
+        }
+
+        .text-center {
+            text-align: center;
+        }
+
+        /* Utility */
+        .mt-2 {
+            margin-top: 2rem;
+        }
+
+        .mb-2 {
+            margin-bottom: 2rem;
+        }
+
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <div class="logo">🐺 Wolf Pack ETF 戰略儀表板</div>
+        <nav>
+            <button class="nav-btn active" data-page="p1">📊 ETF 持股追蹤</button>
+            <button class="nav-btn" data-page="p2">🎯 戰略儀表板</button>
+            <button class="nav-btn" data-page="p3">📋 老墨跟單策略</button>
+            <button class="nav-btn" data-page="p4">🔍 ETF 個別分析</button>
+        </nav>
+    </header>
+
+    <!-- Main Container -->
+    <div class="container">
+
+        <!-- Page 1: ETF 持股追蹤 -->
+        <div class="page active" id="p1">
+            <div class="page-title">📊 ETF 持股追蹤</div>
+
+            <!-- KPIs -->
+            <div class="kpi-grid">
+                <div class="kpi-card">
+                    <div class="kpi-label">00981A 持股數</div>
+                    <div class="kpi-value" id="p1-kpi-holdings">0</div>
+                    <div class="kpi-subtext" id="p1-kpi-holdings-trend">-</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-label">現金水位</div>
+                    <div class="kpi-value" id="p1-kpi-cash">0%</div>
+                    <div class="kpi-subtext" id="p1-kpi-cash-trend">-</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-label">期貨保證金</div>
+                    <div class="kpi-value" id="p1-kpi-futures">-</div>
+                    <div class="kpi-subtext" id="p1-kpi-futures-trend">-</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-label">攻防模式</div>
+                    <div class="kpi-value" id="p1-kpi-mode">-</div>
+                    <div class="kpi-subtext" id="p1-kpi-mode-desc">-</div>
+                </div>
+            </div>
+
+            <!-- Charts Row 1 -->
+            <div class="charts-row">
+                <div class="chart-container">
+                    <div class="chart-title">00981A 現金水位歷史走勢</div>
+                    <canvas id="p1-chart-cash-history"></canvas>
+                </div>
+                <div class="chart-container">
+                    <div class="chart-title">各ETF最新持股數量</div>
+                    <canvas id="p1-chart-etf-holdings"></canvas>
+                </div>
+            </div>
+
+            <!-- Holdings Table with Tabs -->
+            <div class="table-container">
+                <div class="table-title">各ETF持股明細</div>
+                <div class="tabs" id="p1-holdings-tabs">
+                    <button class="tab-btn active" data-tab="holdings-00981a">00981A</button>
+                    <button class="tab-btn" data-tab="holdings-00980a">00980A</button>
+                    <button class="tab-btn" data-tab="holdings-00982a">00982A</button>
+                    <button class="tab-btn" data-tab="holdings-00991a">00991A</button>
+                    <button class="tab-btn" data-tab="holdings-00993a">00993A</button>
+                </div>
+                <div id="holdings-00981a" class="tab-content active">
+                    <table id="p1-table-holdings-00981a">
+                        <thead>
+                            <tr>
+                                <th onclick="sortTable(this)">股票代碼</th>
+                                <th onclick="sortTable(this)">股票名稱</th>
+                                <th class="text-right" onclick="sortTable(this)">權重 (%)</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+                <div id="holdings-00980a" class="tab-content">
+                    <table id="p1-table-holdings-00980a">
+                        <thead>
+                            <tr>
+                                <th onclick="sortTable(this)">股票代碼</th>
+                                <th onclick="sortTable(this)">股票名稱</th>
+                                <th class="text-right" onclick="sortTable(this)">權重 (%)</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+                <div id="holdings-00982a" class="tab-content">
+                    <table id="p1-table-holdings-00982a">
+                        <thead>
+                            <tr>
+                                <th onclick="sortTable(this)">股票代碼</th>
+                                <th onclick="sortTable(this)">股票名稱</th>
+                                <th class="text-right" onclick="sortTable(this)">權重 (%)</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+                <div id="holdings-00991a" class="tab-content">
+                    <table id="p1-table-holdings-00991a">
+                        <thead>
+                            <tr>
+                                <th onclick="sortTable(this)">股票代碼</th>
+                                <th onclick="sortTable(this)">股票名稱</th>
+                                <th class="text-right" onclick="sortTable(this)">權重 (%)</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+                <div id="holdings-00993a" class="tab-content">
+                    <table id="p1-table-holdings-00993a">
+                        <thead>
+                            <tr>
+                                <th onclick="sortTable(this)">股票代碼</th>
+                                <th onclick="sortTable(this)">股票名稱</th>
+                                <th class="text-right" onclick="sortTable(this)">權重 (%)</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Charts Row 2 -->
+            <div class="charts-row">
+                <div class="chart-container">
+                    <div class="chart-title">00981A 前15大持股權重變化 (30日)</div>
+                    <canvas id="p1-chart-weight-history"></canvas>
+                </div>
+                <div class="chart-container">
+                    <div class="chart-title">20日信心度排行</div>
+                    <div style="overflow-y: auto; max-height: 280px;">
+                        <table id="p1-table-conviction" style="font-size: 0.8rem;">
+                            <thead>
+                                <tr>
+                                    <th onclick="sortTable(this)">代碼</th>
+                                    <th onclick="sortTable(this)">名稱</th>
+                                    <th class="text-right" onclick="sortTable(this)">信心度</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Page 2: 戰略儀表板 -->
+        <div class="page" id="p2">
+            <div class="page-title">🎯 戰略儀表板</div>
+
+            <!-- KPIs -->
+            <div class="kpi-grid">
+                <div class="kpi-card">
+                    <div class="kpi-label">加權指數</div>
+                    <div class="kpi-value" id="p2-kpi-taiex">-</div>
+                    <div class="kpi-subtext" id="p2-kpi-taiex-subtext">即時</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-label">VIX 恐慌指數</div>
+                    <div class="kpi-value" id="p2-kpi-vix">-</div>
+                    <div class="kpi-subtext" id="p2-kpi-vix-subtext">即時</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-label">CNN恐慌貪婪</div>
+                    <div class="kpi-value" id="p2-kpi-cnn">-</div>
+                    <div class="kpi-subtext" id="p2-kpi-cnn-subtext">參考</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-label">經理人模式</div>
+                    <div class="kpi-value" id="p2-kpi-manager-mode">-</div>
+                    <div class="kpi-subtext" id="p2-kpi-manager-mode-subtext">-</div>
+                </div>
+            </div>
+
+            <!-- Gauges Row -->
+            <div class="gauge-grid">
+                <div class="gauge-card">
+                    <div class="gauge-title">VIX 燈號</div>
+                    <div class="gauge-value" id="p2-gauge-vix">-</div>
+                    <div class="mode-indicator" id="p2-gauge-vix-mode" style="width: 100%;">-</div>
+                </div>
+                <div class="gauge-card">
+                    <div class="gauge-title">市場情緒</div>
+                    <div class="gauge-value" id="p2-gauge-sentiment">-</div>
+                    <div class="mode-indicator" id="p2-gauge-sentiment-mode" style="width: 100%;">-</div>
+                </div>
+                <div class="gauge-card">
+                    <div class="gauge-title">經理人動向</div>
+                    <div class="gauge-value" id="p2-gauge-manager">-</div>
+                    <div class="mode-indicator" id="p2-gauge-manager-mode" style="width: 100%;">-</div>
+                </div>
+            </div>
+
+            <!-- Content Row -->
+            <div class="charts-row">
+                <div class="table-container" style="margin-bottom: 0;">
+                    <div class="table-title">多ETF共識標的 TOP15</div>
+                    <table id="p2-table-consensus">
+                        <thead>
+                            <tr>
+                                <th onclick="sortTable(this)">代碼</th>
+                                <th onclick="sortTable(this)">名稱</th>
+                                <th class="text-right" onclick="sortTable(this)">共識 (%)</th>
+                                <th class="text-right" onclick="sortTable(this)">參與ETF數</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+                <div style="grid-column: 2;">
+                    <div class="chart-title">今日00981A異動摘要</div>
+                    <div id="p2-signal-container"></div>
+                </div>
+            </div>
+
+            <!-- Wolf Pack View -->
+            <div class="strategy-section">
+                <div class="chart-title">Wolf Pack 綜合觀點</div>
+                <div class="highlight">
+                    基於多ETF共識標的和市場情緒指標，Wolf Pack 綜合分析目前市場狀況和投資方向。
+                </div>
+                <div id="p2-comprehensive-view" style="color: var(--text-muted);">載入中...</div>
+            </div>
+        </div>
+
+        <!-- Page 3: 老墨跟單策略 -->
+        <div class="page" id="p3">
+            <div class="page-title">📋 老墨跟單策略</div>
+
+            <!-- Strategy Explanation -->
+            <div class="strategy-section">
+                <div class="highlight">
+                    <strong>策略概述：</strong>老墨跟單策略基於技術分析和市場共識，自動追蹤多檔優質ETF中的關鍵持股變動，並給出明確的操作信號。
+                </div>
+                <div class="warning">
+                    <strong>風險提示：</strong>投資有風險，過往表現不代表未來走勢。本策略僅供參考，請根據自身風險承受能力謹慎操作。
+                </div>
+                <div class="tip">
+                    <strong>操作建議：</strong>關注高信心度信號，結合個股基本面分析，分批建倉，設置合理止損。
+                </div>
+            </div>
+
+            <!-- Strategy Rules Table -->
+            <div class="table-container">
+                <div class="table-title">策略規則</div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>信號類型</th>
+                            <th>定義</th>
+                            <th>操作建議</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><span class="badge badge-green">新增</span></td>
+                            <td>00981A新進入前100大持股</td>
+                            <td>觀察建倉，確認趨勢後介入</td>
+                        </tr>
+                        <tr>
+                            <td><span class="badge badge-blue">加碼</span></td>
+                            <td>00981A持股權重上升</td>
+                            <td>偏多信號，可逢低加碼</td>
+                        </tr>
+                        <tr>
+                            <td><span class="badge badge-orange">減碼</span></td>
+                            <td>00981A持股權重下降</td>
+                            <td>風險警訊，考慮獲利了結</td>
+                        </tr>
+                        <tr>
+                            <td><span class="badge badge-red">退出</span></td>
+                            <td>00981A退出前100大持股</td>
+                            <td>強烈賣出信號，應及時出場</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Filters -->
+            <div class="filter-buttons">
+                <button class="filter-btn active" onclick="filterSignals('all')">全部</button>
+                <button class="filter-btn" onclick="filterSignals('new')">新增</button>
+                <button class="filter-btn" onclick="filterSignals('added')">加碼</button>
+                <button class="filter-btn" onclick="filterSignals('★★★')">⭐⭐⭐</button>
+            </div>
+
+            <!-- Signals Table -->
+            <div class="table-container">
+                <div class="table-title">跟單信號</div>
+                <table id="p3-table-signals">
+                    <thead>
+                        <tr>
+                            <th onclick="sortTable(this)">日期</th>
+                            <th onclick="sortTable(this)">類型</th>
+                            <th onclick="sortTable(this)">代碼</th>
+                            <th onclick="sortTable(this)">名稱</th>
+                            <th class="text-right" onclick="sortTable(this)">權重變化</th>
+                            <th class="text-right" onclick="sortTable(this)">信心度</th>
+                            <th onclick="sortTable(this)">持有建議</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+
+            <!-- Charts Row -->
+            <div class="charts-row">
+                <div class="chart-container">
+                    <div class="chart-title">信號類型分佈</div>
+                    <canvas id="p3-chart-signal-distribution"></canvas>
+                </div>
+                <div class="chart-container">
+                    <div class="chart-title">月度信號分佈</div>
+                    <canvas id="p3-chart-monthly-signals"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Page 4: ETF 個別分析 -->
+        <div class="page" id="p4">
+            <div class="page-title">🔍 ETF 個別分析</div>
+
+            <!-- ETF Sub-tabs -->
+            <div class="tabs" id="p4-etf-tabs">
+                <button class="tab-btn active" data-etf="00981A" onclick="switchETF('00981A')">00981A</button>
+                <button class="tab-btn" data-etf="00980A" onclick="switchETF('00980A')">00980A</button>
+                <button class="tab-btn" data-etf="00982A" onclick="switchETF('00982A')">00982A</button>
+                <button class="tab-btn" data-etf="00991A" onclick="switchETF('00991A')">00991A</button>
+                <button class="tab-btn" data-etf="00993A" onclick="switchETF('00993A')">00993A</button>
+            </div>
+
+            <!-- KPIs -->
+            <div class="kpi-grid" id="p4-kpi-container">
+                <div class="kpi-card">
+                    <div class="kpi-label">持股數</div>
+                    <div class="kpi-value" id="p4-kpi-holdings">0</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-label">現金水位</div>
+                    <div class="kpi-value" id="p4-kpi-cash">0%</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-label">最新日期</div>
+                    <div class="kpi-value" id="p4-kpi-date">-</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-label">持股集中度 (Top 5)</div>
+                    <div class="kpi-value" id="p4-kpi-concentration">0%</div>
+                </div>
+            </div>
+
+            <!-- Charts Row 1 -->
+            <div class="charts-row">
+                <div class="chart-container">
+                    <div class="chart-title">現金權重 vs 加權指數</div>
+                    <canvas id="p4-chart-cash-vs-index"></canvas>
+                </div>
+                <div class="chart-container">
+                    <div class="chart-title">持股數量變化</div>
+                    <canvas id="p4-chart-holdings-trend"></canvas>
+                </div>
+            </div>
+
+            <!-- Holdings Table -->
+            <div class="table-container">
+                <div class="table-title">完整持股明細</div>
+                <table id="p4-table-holdings">
+                    <thead>
+                        <tr>
+                            <th onclick="sortTable(this)">代碼</th>
+                            <th onclick="sortTable(this)">名稱</th>
+                            <th class="text-right" onclick="sortTable(this)">權重 (%)</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+
+            <!-- Comparison Tool -->
+            <div class="comparison-tool">
+                <div class="table-title">對比分析工具</div>
+                <div class="comparison-controls">
+                    <div>
+                        <label style="display: block; margin-bottom: 0.5rem; font-size: 0.85rem; color: var(--text-muted);">日期 1</label>
+                        <select class="comparison-select" id="p4-compare-date1"></select>
+                    </div>
+                    <div>
+                        <label style="display: block; margin-bottom: 0.5rem; font-size: 0.85rem; color: var(--text-muted);">日期 2</label>
+                        <select class="comparison-select" id="p4-compare-date2"></select>
+                    </div>
+                    <div style="display: flex; align-items: flex-end;">
+                        <button class="comparison-btn" onclick="compareETFDates()">比較</button>
+                    </div>
+                </div>
+
+                <div class="comparison-result" id="p4-comparison-result">
+                    <div class="table-container" style="margin-bottom: 1rem;">
+                        <div class="table-title">新增持股</div>
+                        <table id="p4-compare-new">
+                            <thead>
+                                <tr>
+                                    <th onclick="sortTable(this)">代碼</th>
+                                    <th onclick="sortTable(this)">名稱</th>
+                                    <th class="text-right" onclick="sortTable(this)">權重 (%)</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+
+                    <div class="table-container" style="margin-bottom: 1rem;">
+                        <div class="table-title">退出持股</div>
+                        <table id="p4-compare-exited">
+                            <thead>
+                                <tr>
+                                    <th onclick="sortTable(this)">代碼</th>
+                                    <th onclick="sortTable(this)">名稱</th>
+                                    <th class="text-right" onclick="sortTable(this)">權重變化</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+
+                    <div class="table-container" style="margin-bottom: 1rem;">
+                        <div class="table-title">權重變化持股</div>
+                        <table id="p4-compare-changed">
+                            <thead>
+                                <tr>
+                                    <th onclick="sortTable(this)">代碼</th>
+                                    <th onclick="sortTable(this)">名稱</th>
+                                    <th class="text-right" onclick="sortTable(this)">日期1權重</th>
+                                    <th class="text-right" onclick="sortTable(this)">日期2權重</th>
+                                    <th class="text-right" onclick="sortTable(this)">變化</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+
+                    <div class="kpi-grid">
+                        <div class="kpi-card">
+                            <div class="kpi-label">現金水位變化</div>
+                            <div class="kpi-value" id="p4-compare-cash-delta">-</div>
+                            <div class="kpi-subtext" id="p4-compare-cash-delta-arrow">-</div>
+                        </div>
+                        <div class="kpi-card">
+                            <div class="kpi-label">持股數變化</div>
+                            <div class="kpi-value" id="p4-compare-holdings-delta">-</div>
+                            <div class="kpi-subtext" id="p4-compare-holdings-delta-arrow">-</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // ============================================================================
+        // Global State and Data
+        // ============================================================================
+        let dashboardData = null;
+        let etfPagesData = null;
+        let currentPage = 'p1';
+        let currentETF = '00981A';
+        let currentFilter = 'all';
+        let charts = {};
+
+        const etfList = ['00981A', '00980A', '00982A', '00991A', '00993A'];
+
+        // ============================================================================
+        // Data Loading
+        // ============================================================================
+        async function loadData() {
+            try {
+                console.log('Loading dashboard data...');
+                const [dashRes, etfRes] = await Promise.all([
+                    fetch('data/dashboard.json'),
+                    fetch('data/etf_pages.json')
+                ]);
+
+                if (!dashRes.ok || !etfRes.ok) {
+                    throw new Error('Failed to load data files');
+                }
+
+                dashboardData = await dashRes.json();
+                etfPagesData = await etfRes.json();
+
+                console.log('Data loaded successfully');
+                console.log('Dashboard keys:', Object.keys(dashboardData));
+                console.log('ETF Pages keys:', Object.keys(etfPagesData));
+
+                // Initialize dashboard
+                initializePage('p1');
+                renderPage('p1');
+            } catch (error) {
+                console.error('Error loading data:', error);
+                showLoadingError();
+            }
+        }
+
+        function showLoadingError() {
+            const container = document.querySelector('.container');
+            container.innerHTML = `
+                <div class="loading">
+                    <div style="color: var(--red); margin-bottom: 1rem;">
+                        ❌ 無法載入數據文件
+                    </div>
+                    <p>請確保 data/dashboard.json 和 data/etf_pages.json 存在。</p>
+                    <p style="margin-top: 1rem; font-size: 0.85rem;">錯誤詳情見瀏覽器控制台。</p>
+                </div>
+            `;
+        }
+
+        // ============================================================================
+        // Navigation
+        // ============================================================================
+        function switchPage(pageId) {
+            // Hide all pages
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+
+            // Show selected page
+            document.getElementById(pageId).classList.add('active');
+            document.querySelector(`[data-page="${pageId}"]`).classList.add('active');
+
+            currentPage = pageId;
+
+            // Initialize page if needed
+            if (!document.getElementById(pageId).dataset.initialized) {
+                initializePage(pageId);
+                document.getElementById(pageId).dataset.initialized = 'true';
+            }
+
+            // Render page content
+            renderPage(pageId);
+        }
+
+        function switchETF(etfCode) {
+            currentETF = etfCode;
+            document.querySelectorAll('#p4-etf-tabs .tab-btn').forEach(b => b.classList.remove('active'));
+            document.querySelector(`[data-etf="${etfCode}"]`).classList.add('active');
+            renderETFAnalysis();
+        }
+
+        // Setup nav buttons
+        document.querySelectorAll('.nav-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                switchPage(e.target.dataset.page);
+            });
+        });
+
+        // Setup tab buttons
+        document.addEventListener('click', (e) => {
+            if (e.target.classList.contains('tab-btn') && e.target.dataset.tab) {
+                const tabName = e.target.dataset.tab;
+                document.querySelectorAll(`#${e.target.closest('.tabs').id} .tab-btn`).forEach(b => b.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                e.target.classList.add('active');
+                document.getElementById(tabName).classList.add('active');
+            }
+        });
+
+        // ============================================================================
+        // Page Initialization and Rendering
+        // ============================================================================
+        function initializePage(pageId) {
+            // Placeholder - used to track if page has been initialized
+        }
+
+        function renderPage(pageId) {
+            if (!dashboardData) return;
+
+            switch (pageId) {
+                case 'p1':
+                    renderPage1();
+                    break;
+                case 'p2':
+                    renderPage2();
+                    break;
+                case 'p3':
+                    renderPage3();
+                    break;
+                case 'p4':
+                    renderETFAnalysis();
+                    break;
+            }
+        }
+
+        // ============================================================================
+        // Page 1: ETF 持股追蹤
+        // ============================================================================
+        function renderPage1() {
+            if (!dashboardData || !dashboardData.latest_holdings) return;
+
+            // KPIs
+            const cashMode = dashboardData.cash_mode || {};
+            const latest00981A = dashboardData.latest_holdings['00981A'] || {};
+
+            document.getElementById('p1-kpi-holdings').textContent = latest00981A.n_stocks || 0;
+            document.getElementById('p1-kpi-holdings-trend').textContent = `${latest00981A.date || '-'}`;
+
+            const cashPct = latest00981A.cash_pct || 0;
+            document.getElementById('p1-kpi-cash').textContent = `${(cashPct * 100).toFixed(1)}%`;
+            document.getElementById('p1-kpi-cash-trend').textContent = cashMode.trend || '-';
+
+            const hasFutures = cashMode.has_futures ? '有' : '無';
+            document.getElementById('p1-kpi-futures').textContent = hasFutures;
+            document.getElementById('p1-kpi-futures-trend').textContent = cashMode.futures_signal || '-';
+
+            const modeClass = getModeClass(cashMode.mode);
+            document.getElementById('p1-kpi-mode').innerHTML = `<span class="mode-indicator ${modeClass}">${cashMode.mode || '-'}</span>`;
+            document.getElementById('p1-kpi-mode-desc').textContent = cashMode.mode_desc || '-';
+
+            // Charts
+            renderP1CashHistoryChart();
+            renderP1ETFHoldingsChart();
+            renderP1WeightHistoryChart();
+
+            // Holdings Tables
+            renderP1HoldingsTables();
+
+            // Conviction Table
+            renderP1ConvictionTable();
+        }
+
+        function renderP1CashHistoryChart() {
+            if (!dashboardData.cash_series) return;
+
+            const ctx = document.getElementById('p1-chart-cash-history');
+            if (!ctx) return;
+
+            if (charts['p1-cash-history']) {
+                charts['p1-cash-history'].destroy();
+            }
+
+            const data = dashboardData.cash_series;
+            const last30 = data.slice(-30);
+
+            charts['p1-cash-history'] = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: last30.map(d => d.date),
+                    datasets: [
+                        {
+                            label: '現金比例',
+                            data: last30.map(d => (d.cash_pct * 100).toFixed(1)),
+                            borderColor: '#4f8ef7',
+                            backgroundColor: 'rgba(79, 142, 247, 0.1)',
+                            borderWidth: 2,
+                            tension: 0.3,
+                            pointRadius: 0,
+                            fill: true
+                        },
+                        {
+                            label: '5日均線',
+                            data: last30.map(d => d.cash_5ma ? (d.cash_5ma * 100).toFixed(1) : null),
+                            borderColor: '#ffa502',
+                            borderWidth: 1,
+                            borderDash: [5, 5],
+                            pointRadius: 0,
+                            tension: 0.3
+                        },
+                        {
+                            label: '20日均線',
+                            data: last30.map(d => d.cash_20ma ? (d.cash_20ma * 100).toFixed(1) : null),
+                            borderColor: '#ff4757',
+                            borderWidth: 1,
+                            borderDash: [5, 5],
+                            pointRadius: 0,
+                            tension: 0.3
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            labels: { color: '#8b8fa3', font: { size: 11 } }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            ticks: { color: '#8b8fa3' },
+                            grid: { color: 'rgba(42, 46, 61, 0.5)' }
+                        },
+                        x: {
+                            ticks: { color: '#8b8fa3' },
+                            grid: { color: 'rgba(42, 46, 61, 0.5)' }
+                        }
+                    }
+                }
+            });
+        }
+
+        function renderP1ETFHoldingsChart() {
+            if (!dashboardData.latest_holdings) return;
+
+            const ctx = document.getElementById('p1-chart-etf-holdings');
+            if (!ctx) return;
+
+            if (charts['p1-etf-holdings']) {
+                charts['p1-etf-holdings'].destroy();
+            }
+
+            const etfs = ['00981A', '00980A', '00982A', '00991A', '00993A'];
+            const holdings = etfs.map(e => dashboardData.latest_holdings[e]?.n_stocks || 0);
+
+            charts['p1-etf-holdings'] = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: etfs,
+                    datasets: [{
+                        label: '持股數',
+                        data: holdings,
+                        backgroundColor: '#4f8ef7',
+                        borderColor: '#4f8ef7',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        x: {
+                            ticks: { color: '#8b8fa3' },
+                            grid: { color: 'rgba(42, 46, 61, 0.5)' }
+                        },
+                        y: {
+                            ticks: { color: '#8b8fa3' },
+                            grid: { display: false }
+                        }
+                    }
+                }
+            });
+        }
+
+        function renderP1WeightHistoryChart() {
+            if (!dashboardData.weight_history) return;
+
+            const ctx = document.getElementById('p1-chart-weight-history');
+            if (!ctx) return;
+
+            if (charts['p1-weight-history']) {
+                charts['p1-weight-history'].destroy();
+            }
+
+            const history = dashboardData.weight_history;
+            const topStocks = Object.keys(history).slice(0, 15);
+            const dates = dashboardData.dates || [];
+            const last30dates = dates.slice(-30);
+
+            const datasets = topStocks.map((code, idx) => {
+                const colors = ['#4f8ef7', '#00c48c', '#ffa502', '#ff4757', '#a855f7', '#22d3ee', '#64b5f6', '#1de9b6', '#ffb520', '#ff6b7a', '#c77dff', '#00d9ff', '#90e0ef', '#aacc00', '#ffaa00'];
+                return {
+                    label: code,
+                    data: last30dates.map(d => {
+                        const record = history[code].find(h => h.date === d);
+                        return record ? (record.weight * 100).toFixed(2) : null;
+                    }),
+                    borderColor: colors[idx % colors.length],
+                    borderWidth: 1.5,
+                    tension: 0.3,
+                    pointRadius: 0,
+                    fill: false
+                };
+            });
+
+            charts['p1-weight-history'] = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: last30dates,
+                    datasets: datasets
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            labels: { color: '#8b8fa3', font: { size: 10 } },
+                            position: 'right',
+                            align: 'middle'
+                        }
+                    },
+                    scales: {
+                        y: {
+                            ticks: { color: '#8b8fa3' },
+                            grid: { color: 'rgba(42, 46, 61, 0.5)' }
+                        },
+                        x: {
+                            ticks: { color: '#8b8fa3' },
+                            grid: { color: 'rgba(42, 46, 61, 0.5)' }
+                        }
+                    }
+                }
+            });
+        }
+
+        function renderP1HoldingsTables() {
+            if (!dashboardData.latest_holdings) return;
+
+            const holdings = dashboardData.latest_holdings;
+
+            etfList.forEach(etf => {
+                const tableId = `p1-table-holdings-${etf.toLowerCase()}`;
+                const tbody = document.querySelector(`#${tableId} tbody`);
+                if (!tbody) return;
+
+                const etfData = holdings[etf];
+                if (!etfData || !etfData.stocks) {
+                    tbody.innerHTML = '<tr><td colspan="3" style="text-align: center; color: var(--text-muted);">無數據</td></tr>';
+                    return;
+                }
+
+                tbody.innerHTML = etfData.stocks.map(stock => `
+                    <tr>
+                        <td>${stock.code}</td>
+                        <td>${stock.name}</td>
+                        <td class="text-right">${(stock.weight * 100).toFixed(2)}%</td>
+                    </tr>
+                `).join('');
+            });
+        }
+
+        function renderP1ConvictionTable() {
+            if (!dashboardData.conviction) return;
+
+            const tbody = document.querySelector('#p1-table-conviction tbody');
+            if (!tbody) return;
+
+            const conviction = dashboardData.conviction.slice(0, 20);
+
+            tbody.innerHTML = conviction.map(item => `
+                <tr>
+                    <td>${item.code}</td>
+                    <td>${item.name}</td>
+                    <td class="text-right"><span class="badge badge-blue">${item.conviction || '-'}</span></td>
+                </tr>
+            `).join('');
+        }
+
+        // ============================================================================
+        // Page 2: 戰略儀表板
+        // ============================================================================
+        function renderPage2() {
+            if (!dashboardData) return;
+
+            // KPIs - Using fallback values
+            document.getElementById('p2-kpi-taiex').textContent = '12345';
+            document.getElementById('p2-kpi-vix').textContent = '15.5';
+            document.getElementById('p2-kpi-cnn').textContent = '65';
+
+            const cashMode = dashboardData.cash_mode || {};
+            const modeClass = getModeClass(cashMode.mode);
+            document.getElementById('p2-kpi-manager-mode').innerHTML = `<span class="mode-indicator ${modeClass}">${cashMode.mode || '-'}</span>`;
+
+            // Gauges
+            updateP2Gauges();
+
+            // Consensus Table
+            renderP2ConsensusTable();
+
+            // Signal Cards
+            renderP2SignalCards();
+
+            // Comprehensive View
+            renderP2ComprehensiveView();
+
+            // Try to fetch live data
+            fetchLiveData();
+        }
+
+        function updateP2Gauges() {
+            // VIX Gauge
+            const vixValue = 15.5;
+            document.getElementById('p2-gauge-vix').textContent = vixValue.toFixed(1);
+            const vixMode = vixValue < 12 ? 'mode-neutral' : vixValue < 20 ? 'mode-defense' : 'mode-high-defense';
+            document.getElementById('p2-gauge-vix-mode').className = `mode-indicator ${vixMode}`;
+            document.getElementById('p2-gauge-vix-mode').textContent = vixValue < 12 ? '低恐慌' : vixValue < 20 ? '適度恐慌' : '高恐慌';
+
+            // Sentiment Gauge
+            document.getElementById('p2-gauge-sentiment').textContent = '中性';
+            document.getElementById('p2-gauge-sentiment-mode').className = 'mode-indicator mode-neutral';
+            document.getElementById('p2-gauge-sentiment-mode').textContent = '市場平衡';
+
+            // Manager Gauge
+            const cashMode = dashboardData.cash_mode || {};
+            const modeClass = getModeClass(cashMode.mode);
+            document.getElementById('p2-gauge-manager').textContent = cashMode.mode || '-';
+            document.getElementById('p2-gauge-manager-mode').className = `mode-indicator ${modeClass}`;
+            document.getElementById('p2-gauge-manager-mode').textContent = cashMode.mode_desc || '-';
+        }
+
+        function renderP2ConsensusTable() {
+            if (!dashboardData.consensus) return;
+
+            const tbody = document.querySelector('#p2-table-consensus tbody');
+            if (!tbody) return;
+
+            const consensus = dashboardData.consensus.slice(0, 15);
+
+            tbody.innerHTML = consensus.map(item => `
+                <tr>
+                    <td>${item.code}</td>
+                    <td>${item.name}</td>
+                    <td class="text-right">${(item.consensus_score * 100).toFixed(1)}%</td>
+                    <td class="text-right"><span class="badge badge-blue">${item.n_etfs}</span></td>
+                </tr>
+            `).join('');
+        }
+
+        function renderP2SignalCards() {
+            if (!dashboardData.daily_changes || !dashboardData.daily_changes['00981A']) return;
+
+            const container = document.getElementById('p2-signal-container');
+            const changes = dashboardData.daily_changes['00981A'][0] || {};
+
+            let html = '';
+
+            if (changes.new && changes.new.length > 0) {
+                html += changes.new.map(s => `
+                    <div class="signal-card signal-new">
+                        <div class="signal-title">✨ 新增: ${s.code} ${s.name}</div>
+                        <div class="signal-text">權重: ${(s.weight * 100).toFixed(2)}%</div>
+                    </div>
+                `).join('');
+            }
+
+            if (changes.added && changes.added.length > 0) {
+                html += changes.added.map(s => `
+                    <div class="signal-card signal-add">
+                        <div class="signal-title">📈 加碼: ${s.code} ${s.name}</div>
+                        <div class="signal-text">變化: +${(s.weight * 100).toFixed(2)}%</div>
+                    </div>
+                `).join('');
+            }
+
+            if (changes.reduced && changes.reduced.length > 0) {
+                html += changes.reduced.map(s => `
+                    <div class="signal-card signal-reduce">
+                        <div class="signal-title">📉 減碼: ${s.code} ${s.name}</div>
+                        <div class="signal-text">變化: -${(s.weight * 100).toFixed(2)}%</div>
+                    </div>
+                `).join('');
+            }
+
+            if (changes.exited && changes.exited.length > 0) {
+                html += changes.exited.map(s => `
+                    <div class="signal-card signal-exit">
+                        <div class="signal-title">❌ 退出: ${s.code} ${s.name}</div>
+                        <div class="signal-text">前權重: ${(s.weight * 100).toFixed(2)}%</div>
+                    </div>
+                `).join('');
+            }
+
+            container.innerHTML = html || '<div style="color: var(--text-muted); padding: 1rem;">今日無異動</div>';
+        }
+
+        function renderP2ComprehensiveView() {
+            const cashMode = dashboardData.cash_mode || {};
+            const consensus = (dashboardData.consensus || []).slice(0, 5);
+
+            const topStocks = consensus.map(c => `${c.code}(${c.name})`).join(', ');
+            const view = `
+                目前市場情緒${dashboardData.cash_mode?.mode === 'Attack' ? '偏強' : '偏弱'}，00981A採用${cashMode.mode_desc || '-'}策略。
+                共識標的TOP5為: ${topStocks || '無'}。
+                建議關注資金面變化和技術面支撐位。
+            `;
+
+            document.getElementById('p2-comprehensive-view').textContent = view;
+        }
+
+        function fetchLiveData() {
+            // Placeholder for live data fetching
+            // In production, would fetch from TradingView or Yahoo Finance
+        }
+
+        // ============================================================================
+        // Page 3: 老墨跟單策略
+        // ============================================================================
+        function renderPage3() {
+            if (!dashboardData || !dashboardData.laomo_signals) return;
+
+            renderP3SignalsTable();
+            renderP3Charts();
+        }
+
+        function renderP3SignalsTable() {
+            if (!dashboardData.laomo_signals) return;
+
+            const tbody = document.querySelector('#p3-table-signals tbody');
+            if (!tbody) return;
+
+            const signals = dashboardData.laomo_signals;
+            const filtered = filterSignalsByType(signals, currentFilter);
+
+            tbody.innerHTML = filtered.map(signal => {
+                const typeClass = getSignalClass(signal.type);
+                const typeBadge = getSignalBadge(signal.type);
+                const confidenceStars = '⭐'.repeat(Math.min(parseInt(signal.confidence) || 0, 5));
+
+                return `
+                    <tr>
+                        <td>${signal.date}</td>
+                        <td><span class="badge ${typeClass}">${typeBadge}</span></td>
+                        <td>${signal.code}</td>
+                        <td>${signal.name}</td>
+                        <td class="text-right">${signal.weight_chg > 0 ? '+' : ''}${(signal.weight_chg * 100).toFixed(2)}%</td>
+                        <td class="text-right">${confidenceStars || '-'}</td>
+                        <td>${signal.hold_suggestion || '-'}</td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function renderP3Charts() {
+            renderP3SignalDistributionChart();
+            renderP3MonthlySignalsChart();
+        }
+
+        function renderP3SignalDistributionChart() {
+            if (!dashboardData.laomo_signals) return;
+
+            const ctx = document.getElementById('p3-chart-signal-distribution');
+            if (!ctx) return;
+
+            if (charts['p3-signal-distribution']) {
+                charts['p3-signal-distribution'].destroy();
+            }
+
+            const signals = dashboardData.laomo_signals;
+            const types = {};
+
+            signals.forEach(s => {
+                types[s.type] = (types[s.type] || 0) + 1;
+            });
+
+            const colors = {
+                'new': '#00c48c',
+                'added': '#4f8ef7',
+                'reduced': '#ffa502',
+                'exited': '#ff4757'
+            };
+
+            charts['p3-signal-distribution'] = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: Object.keys(types),
+                    datasets: [{
+                        data: Object.values(types),
+                        backgroundColor: Object.keys(types).map(t => colors[t] || '#4f8ef7')
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            labels: { color: '#8b8fa3' }
+                        }
+                    }
+                }
+            });
+        }
+
+        function renderP3MonthlySignalsChart() {
+            if (!dashboardData.laomo_signals) return;
+
+            const ctx = document.getElementById('p3-chart-monthly-signals');
+            if (!ctx) return;
+
+            if (charts['p3-monthly-signals']) {
+                charts['p3-monthly-signals'].destroy();
+            }
+
+            const signals = dashboardData.laomo_signals;
+            const months = {};
+
+            signals.forEach(s => {
+                const month = s.date.substring(0, 7);
+                months[month] = (months[month] || 0) + 1;
+            });
+
+            charts['p3-monthly-signals'] = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: Object.keys(months).sort(),
+                    datasets: [{
+                        label: '信號數',
+                        data: Object.keys(months).sort().map(m => months[m]),
+                        backgroundColor: '#4f8ef7'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        y: {
+                            ticks: { color: '#8b8fa3' },
+                            grid: { color: 'rgba(42, 46, 61, 0.5)' }
+                        },
+                        x: {
+                            ticks: { color: '#8b8fa3' },
+                            grid: { color: 'rgba(42, 46, 61, 0.5)' }
+                        }
+                    }
+                }
+            });
+        }
+
+        function filterSignals(filter) {
+            currentFilter = filter;
+
+            // Update active filter button
+            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+            document.querySelector(`[onclick="filterSignals('${filter}')"]`).classList.add('active');
+
+            renderP3SignalsTable();
+        }
+
+        function filterSignalsByType(signals, filter) {
+            if (filter === 'all') return signals;
+            if (filter === 'new') return signals.filter(s => s.type === 'new');
+            if (filter === 'added') return signals.filter(s => s.type === 'added');
+            if (filter === '★★★') return signals.filter(s => s.confidence >= 3);
+            return signals;
+        }
+
+        // ============================================================================
+        // Page 4: ETF 個別分析
+        // ============================================================================
+        function renderETFAnalysis() {
+            if (!etfPagesData || !dashboardData) return;
+
+            const etfData = etfPagesData[currentETF];
+            if (!etfData) return;
+
+            renderP4KPIs(etfData);
+            renderP4Charts(etfData);
+            renderP4HoldingsTable(etfData);
+            populateComparisonSelects(etfData);
+        }
+
+        function renderP4KPIs(etfData) {
+            const latest = etfData.date_records[etfData.date_records.length - 1] || {};
+
+            document.getElementById('p4-kpi-holdings').textContent = latest.n_stocks || 0;
+            document.getElementById('p4-kpi-cash').textContent = `${(latest.cash_pct * 100).toFixed(1)}%`;
+            document.getElementById('p4-kpi-date').textContent = latest.date || '-';
+
+            // Calculate top5 concentration
+            if (latest.holdings) {
+                const top5Weight = latest.holdings.slice(0, 5).reduce((sum, h) => sum + h.weight, 0);
+                document.getElementById('p4-kpi-concentration').textContent = `${(top5Weight * 100).toFixed(1)}%`;
+            }
+        }
+
+        function renderP4Charts(etfData) {
+            renderP4CashVsIndexChart(etfData);
+            renderP4HoldingsTrendChart(etfData);
+        }
+
+        function renderP4CashVsIndexChart(etfData) {
+            const ctx = document.getElementById('p4-chart-cash-vs-index');
+            if (!ctx) return;
+
+            if (charts['p4-cash-vs-index']) {
+                charts['p4-cash-vs-index'].destroy();
+            }
+
+            const last30 = etfData.cash_series.slice(-30);
+
+            charts['p4-cash-vs-index'] = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: last30.map(d => d.date),
+                    datasets: [
+                        {
+                            label: '現金比例',
+                            data: last30.map(d => (d.cash_pct * 100).toFixed(1)),
+                            borderColor: '#4f8ef7',
+                            backgroundColor: 'rgba(79, 142, 247, 0.1)',
+                            borderWidth: 2,
+                            tension: 0.3,
+                            pointRadius: 0,
+                            fill: true,
+                            yAxisID: 'y'
+                        },
+                        {
+                            label: '加權指數',
+                            data: last30.map(d => d.taiex || null),
+                            borderColor: '#00c48c',
+                            borderWidth: 1.5,
+                            tension: 0.3,
+                            pointRadius: 0,
+                            yAxisID: 'y1'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            labels: { color: '#8b8fa3', font: { size: 11 } }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            type: 'linear',
+                            display: true,
+                            position: 'left',
+                            ticks: { color: '#8b8fa3' },
+                            grid: { color: 'rgba(42, 46, 61, 0.5)' },
+                            title: { display: true, text: '現金比例 (%)', color: '#8b8fa3' }
+                        },
+                        y1: {
+                            type: 'linear',
+                            display: true,
+                            position: 'right',
+                            ticks: { color: '#8b8fa3' },
+                            grid: { display: false },
+                            title: { display: true, text: '加權指數', color: '#8b8fa3' }
+                        },
+                        x: {
+                            ticks: { color: '#8b8fa3' },
+                            grid: { color: 'rgba(42, 46, 61, 0.5)' }
+                        }
+                    }
+                }
+            });
+        }
+
+        function renderP4HoldingsTrendChart(etfData) {
+            const ctx = document.getElementById('p4-chart-holdings-trend');
+            if (!ctx) return;
+
+            if (charts['p4-holdings-trend']) {
+                charts['p4-holdings-trend'].destroy();
+            }
+
+            if (etfData.date_records.length < 2) {
+                ctx.parentElement.innerHTML = '<div style="color: var(--text-muted); padding: 1rem;">數據不足以展示趨勢</div>';
+                return;
+            }
+
+            const last30 = etfData.date_records.slice(-30);
+
+            charts['p4-holdings-trend'] = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: last30.map(d => d.date),
+                    datasets: [{
+                        label: '持股數',
+                        data: last30.map(d => d.n_stocks),
+                        borderColor: '#a855f7',
+                        backgroundColor: 'rgba(168, 85, 247, 0.1)',
+                        borderWidth: 2,
+                        tension: 0.3,
+                        pointRadius: 0,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            labels: { color: '#8b8fa3' }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            ticks: { color: '#8b8fa3' },
+                            grid: { color: 'rgba(42, 46, 61, 0.5)' }
+                        },
+                        x: {
+                            ticks: { color: '#8b8fa3' },
+                            grid: { color: 'rgba(42, 46, 61, 0.5)' }
+                        }
+                    }
+                }
+            });
+        }
+
+        function renderP4HoldingsTable(etfData) {
+            const latest = etfData.date_records[etfData.date_records.length - 1] || {};
+            const tbody = document.querySelector('#p4-table-holdings tbody');
+            if (!tbody) return;
+
+            if (!latest.holdings) {
+                tbody.innerHTML = '<tr><td colspan="3" style="text-align: center; color: var(--text-muted);">無數據</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = latest.holdings.map(holding => `
+                <tr>
+                    <td>${holding.code}</td>
+                    <td>${holding.name}</td>
+                    <td class="text-right">${(holding.weight * 100).toFixed(2)}%</td>
+                </tr>
+            `).join('');
+        }
+
+        function populateComparisonSelects(etfData) {
+            const dates = etfData.date_records.map(d => d.date).reverse();
+
+            const sel1 = document.getElementById('p4-compare-date1');
+            const sel2 = document.getElementById('p4-compare-date2');
+
+            sel1.innerHTML = dates.map(d => `<option value="${d}">${d}</option>`).join('');
+            sel2.innerHTML = dates.map(d => `<option value="${d}">${d}</option>`).join('');
+
+            if (dates.length > 1) {
+                sel2.value = dates[1];
+            }
+        }
+
+        function compareETFDates() {
+            if (!etfPagesData || !etfPagesData[currentETF]) return;
+
+            const etfData = etfPagesData[currentETF];
+            const date1 = document.getElementById('p4-compare-date1').value;
+            const date2 = document.getElementById('p4-compare-date2').value;
+
+            const record1 = etfData.date_records.find(r => r.date === date1);
+            const record2 = etfData.date_records.find(r => r.date === date2);
+
+            if (!record1 || !record2) {
+                alert('請選擇有效日期');
+                return;
+            }
+
+            const holdings1 = record1.holdings || [];
+            const holdings2 = record2.holdings || [];
+
+            const codes1 = new Set(holdings1.map(h => h.code));
+            const codes2 = new Set(holdings2.map(h => h.code));
+
+            // New stocks
+            const newStocks = holdings2.filter(h => !codes1.has(h.code));
+            renderComparisonTable('p4-compare-new', newStocks);
+
+            // Exited stocks
+            const exitedStocks = holdings1.filter(h => !codes2.has(h.code));
+            renderComparisonTable('p4-compare-exited', exitedStocks);
+
+            // Changed stocks
+            const changedStocks = holdings1
+                .filter(h => codes2.has(h.code))
+                .map(h1 => {
+                    const h2 = holdings2.find(h => h.code === h1.code);
+                    return {
+                        code: h1.code,
+                        name: h1.name,
+                        weight1: h1.weight,
+                        weight2: h2.weight,
+                        delta: h2.weight - h1.weight
+                    };
+                })
+                .filter(h => Math.abs(h.delta) > 0.0001);
+
+            renderComparisonChangedTable(changedStocks);
+
+            // Cash delta
+            const cashDelta = record2.cash_pct - record1.cash_pct;
+            document.getElementById('p4-compare-cash-delta').textContent = `${(cashDelta * 100).toFixed(2)}%`;
+            document.getElementById('p4-compare-cash-delta-arrow').innerHTML = cashDelta > 0 ? '📈 增加' : '📉 減少';
+
+            // Holdings delta
+            const holdingsDelta = record2.n_stocks - record1.n_stocks;
+            document.getElementById('p4-compare-holdings-delta').textContent = `${holdingsDelta > 0 ? '+' : ''}${holdingsDelta}`;
+            document.getElementById('p4-compare-holdings-delta-arrow').innerHTML = holdingsDelta > 0 ? '📈 增加' : '📉 減少';
+
+            document.getElementById('p4-comparison-result').classList.add('show');
+        }
+
+        function renderComparisonTable(tableId, stocks) {
+            const tbody = document.querySelector(`#${tableId} tbody`);
+            if (!tbody) return;
+
+            tbody.innerHTML = stocks.map(stock => `
+                <tr>
+                    <td>${stock.code}</td>
+                    <td>${stock.name}</td>
+                    <td class="text-right">${(stock.weight * 100).toFixed(2)}%</td>
+                </tr>
+            `).join('');
+        }
+
+        function renderComparisonChangedTable(stocks) {
+            const tbody = document.querySelector('#p4-compare-changed tbody');
+            if (!tbody) return;
+
+            tbody.innerHTML = stocks.map(stock => {
+                const deltaClass = stock.delta > 0 ? 'delta-up' : 'delta-down';
+                return `
+                    <tr>
+                        <td>${stock.code}</td>
+                        <td>${stock.name}</td>
+                        <td class="text-right">${(stock.weight1 * 100).toFixed(2)}%</td>
+                        <td class="text-right">${(stock.weight2 * 100).toFixed(2)}%</td>
+                        <td class="text-right"><span class="${deltaClass}">${stock.delta > 0 ? '+' : ''}${(stock.delta * 100).toFixed(2)}%</span></td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        // ============================================================================
+        // Utility Functions
+        // ============================================================================
+        function getModeClass(mode) {
+            const modeMap = {
+                'High Defense': 'mode-high-defense',
+                'Defense': 'mode-defense',
+                'Neutral': 'mode-neutral',
+                'Attack': 'mode-attack'
+            };
+            return modeMap[mode] || 'mode-neutral';
+        }
+
+        function getSignalClass(type) {
+            const typeMap = {
+                'new': 'badge-green',
+                'added': 'badge-blue',
+                'reduced': 'badge-orange',
+                'exited': 'badge-red'
+            };
+            return typeMap[type] || 'badge-blue';
+        }
+
+        function getSignalBadge(type) {
+            const typeMap = {
+                'new': '新增',
+                'added': '加碼',
+                'reduced': '減碼',
+                'exited': '退出'
+            };
+            return typeMap[type] || type;
+        }
+
+        function sortTable(headerElement) {
+            const table = headerElement.closest('table');
+            const tbody = table.querySelector('tbody');
+            const headers = Array.from(table.querySelectorAll('th'));
+            const columnIndex = headers.indexOf(headerElement);
+
+            const rows = Array.from(tbody.querySelectorAll('tr'));
+            const isNumeric = (val) => !isNaN(parseFloat(val)) && isFinite(val);
+
+            rows.sort((a, b) => {
+                const aVal = a.children[columnIndex].textContent.trim();
+                const bVal = b.children[columnIndex].textContent.trim();
+
+                if (isNumeric(aVal) && isNumeric(bVal)) {
+                    return parseFloat(aVal) - parseFloat(bVal);
+                }
+                return aVal.localeCompare(bVal, 'zh-TW');
+            });
+
+            tbody.innerHTML = '';
+            rows.forEach(row => tbody.appendChild(row));
+        }
+
+        // ============================================================================
+        // Initialization
+        // ============================================================================
+        document.addEventListener('DOMContentLoaded', loadData);
+    </script>
+</body>
+</html>
