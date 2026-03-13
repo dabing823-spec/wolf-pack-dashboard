@@ -1211,7 +1211,7 @@
             document.getElementById('p1-kpi-holdings-trend').textContent = `${latest00981A.date || '-'}`;
 
             const cashPct = latest00981A.cash_pct || 0;
-            document.getElementById('p1-kpi-cash').textContent = `${(cashPct * 100).toFixed(1)}%`;
+            document.getElementById('p1-kpi-cash').textContent = `${cashPct.toFixed(1)}%`;
             document.getElementById('p1-kpi-cash-trend').textContent = cashMode.trend || '-';
 
             const hasFutures = cashMode.has_futures ? '有' : '無';
@@ -1254,7 +1254,7 @@
                     datasets: [
                         {
                             label: '現金比例',
-                            data: last30.map(d => (d.cash_pct * 100).toFixed(1)),
+                            data: last30.map(d => d.cash_pct?.toFixed(1)),
                             borderColor: '#4f8ef7',
                             backgroundColor: 'rgba(79, 142, 247, 0.1)',
                             borderWidth: 2,
@@ -1264,7 +1264,7 @@
                         },
                         {
                             label: '5日均線',
-                            data: last30.map(d => d.cash_5ma ? (d.cash_5ma * 100).toFixed(1) : null),
+                            data: last30.map(d => d.cash_5ma ? d.cash_5ma?.toFixed(1) : null),
                             borderColor: '#ffa502',
                             borderWidth: 1,
                             borderDash: [5, 5],
@@ -1273,7 +1273,7 @@
                         },
                         {
                             label: '20日均線',
-                            data: last30.map(d => d.cash_20ma ? (d.cash_20ma * 100).toFixed(1) : null),
+                            data: last30.map(d => d.cash_20ma ? d.cash_20ma?.toFixed(1) : null),
                             borderColor: '#ff4757',
                             borderWidth: 1,
                             borderDash: [5, 5],
@@ -1371,7 +1371,7 @@
                     label: code,
                     data: last30dates.map(d => {
                         const record = history[code].find(h => h.date === d);
-                        return record ? (record.weight * 100).toFixed(2) : null;
+                        return record ? record.weight?.toFixed(2) : null;
                     }),
                     borderColor: colors[idx % colors.length],
                     borderWidth: 1.5,
@@ -1431,7 +1431,7 @@
                     <tr>
                         <td>${stock.code}</td>
                         <td>${stock.name}</td>
-                        <td class="text-right">${(stock.weight * 100).toFixed(2)}%</td>
+                        <td class="text-right">${stock.weight?.toFixed(2)}%</td>
                     </tr>
                 `).join('');
             });
@@ -1460,10 +1460,10 @@
         function renderPage2() {
             if (!dashboardData) return;
 
-            // KPIs - Using fallback values
-            document.getElementById('p2-kpi-taiex').textContent = '12345';
-            document.getElementById('p2-kpi-vix').textContent = '15.5';
-            document.getElementById('p2-kpi-cnn').textContent = '65';
+            // KPIs - Market data not in JSON, show cash data instead
+            document.getElementById('p2-kpi-taiex').textContent = '-';
+            document.getElementById('p2-kpi-vix').textContent = '-';
+            document.getElementById('p2-kpi-cnn').textContent = '-';
 
             const cashMode = dashboardData.cash_mode || {};
             const modeClass = getModeClass(cashMode.mode);
@@ -1486,17 +1486,15 @@
         }
 
         function updateP2Gauges() {
-            // VIX Gauge
-            const vixValue = 15.5;
-            document.getElementById('p2-gauge-vix').textContent = vixValue.toFixed(1);
-            const vixMode = vixValue < 12 ? 'mode-neutral' : vixValue < 20 ? 'mode-defense' : 'mode-high-defense';
-            document.getElementById('p2-gauge-vix-mode').className = `mode-indicator ${vixMode}`;
-            document.getElementById('p2-gauge-vix-mode').textContent = vixValue < 12 ? '低恐慌' : vixValue < 20 ? '適度恐慌' : '高恐慌';
+            // VIX Gauge - no live data
+            document.getElementById('p2-gauge-vix').textContent = '-';
+            document.getElementById('p2-gauge-vix-mode').className = 'mode-indicator mode-neutral';
+            document.getElementById('p2-gauge-vix-mode').textContent = '待連接即時數據';
 
             // Sentiment Gauge
-            document.getElementById('p2-gauge-sentiment').textContent = '中性';
+            document.getElementById('p2-gauge-sentiment').textContent = '-';
             document.getElementById('p2-gauge-sentiment-mode').className = 'mode-indicator mode-neutral';
-            document.getElementById('p2-gauge-sentiment-mode').textContent = '市場平衡';
+            document.getElementById('p2-gauge-sentiment-mode').textContent = '待連接即時數據';
 
             // Manager Gauge
             const cashMode = dashboardData.cash_mode || {};
@@ -1518,7 +1516,7 @@
                 <tr>
                     <td>${item.code}</td>
                     <td>${item.name}</td>
-                    <td class="text-right">${(item.consensus_score * 100).toFixed(1)}%</td>
+                    <td class="text-right">${item.consensus_score}</td>
                     <td class="text-right"><span class="badge badge-blue">${item.n_etfs}</span></td>
                 </tr>
             `).join('');
@@ -1528,7 +1526,8 @@
             if (!dashboardData.daily_changes || !dashboardData.daily_changes['00981A']) return;
 
             const container = document.getElementById('p2-signal-container');
-            const changes = dashboardData.daily_changes['00981A'][0] || {};
+            const changesArr = dashboardData.daily_changes['00981A'] || [];
+            const changes = changesArr[changesArr.length - 1] || {};
 
             let html = '';
 
@@ -1536,7 +1535,7 @@
                 html += changes.new.map(s => `
                     <div class="signal-card signal-new">
                         <div class="signal-title">✨ 新增: ${s.code} ${s.name}</div>
-                        <div class="signal-text">權重: ${(s.weight * 100).toFixed(2)}%</div>
+                        <div class="signal-text">權重: ${s.weight?.toFixed(2)}%</div>
                     </div>
                 `).join('');
             }
@@ -1545,7 +1544,7 @@
                 html += changes.added.map(s => `
                     <div class="signal-card signal-add">
                         <div class="signal-title">📈 加碼: ${s.code} ${s.name}</div>
-                        <div class="signal-text">變化: +${(s.weight * 100).toFixed(2)}%</div>
+                        <div class="signal-text">變化: +${s.weight?.toFixed(2)}%</div>
                     </div>
                 `).join('');
             }
@@ -1554,7 +1553,7 @@
                 html += changes.reduced.map(s => `
                     <div class="signal-card signal-reduce">
                         <div class="signal-title">📉 減碼: ${s.code} ${s.name}</div>
-                        <div class="signal-text">變化: -${(s.weight * 100).toFixed(2)}%</div>
+                        <div class="signal-text">變化: -${s.weight?.toFixed(2)}%</div>
                     </div>
                 `).join('');
             }
@@ -1563,7 +1562,7 @@
                 html += changes.exited.map(s => `
                     <div class="signal-card signal-exit">
                         <div class="signal-title">❌ 退出: ${s.code} ${s.name}</div>
-                        <div class="signal-text">前權重: ${(s.weight * 100).toFixed(2)}%</div>
+                        <div class="signal-text">前權重: ${s.weight?.toFixed(2)}%</div>
                     </div>
                 `).join('');
             }
@@ -1606,13 +1605,13 @@
             const tbody = document.querySelector('#p3-table-signals tbody');
             if (!tbody) return;
 
-            const signals = dashboardData.laomo_signals;
+            const signals = dashboardData.laomo_signals.signals || dashboardData.laomo_signals;
             const filtered = filterSignalsByType(signals, currentFilter);
 
             tbody.innerHTML = filtered.map(signal => {
                 const typeClass = getSignalClass(signal.type);
                 const typeBadge = getSignalBadge(signal.type);
-                const confidenceStars = '⭐'.repeat(Math.min(parseInt(signal.confidence) || 0, 5));
+                const confidenceStars = signal.confidence || '-';
 
                 return `
                     <tr>
@@ -1620,7 +1619,7 @@
                         <td><span class="badge ${typeClass}">${typeBadge}</span></td>
                         <td>${signal.code}</td>
                         <td>${signal.name}</td>
-                        <td class="text-right">${signal.weight_chg > 0 ? '+' : ''}${(signal.weight_chg * 100).toFixed(2)}%</td>
+                        <td class="text-right">${signal.weight_chg > 0 ? '+' : ''}${signal.weight_chg?.toFixed(2)}%</td>
                         <td class="text-right">${confidenceStars || '-'}</td>
                         <td>${signal.hold_suggestion || '-'}</td>
                     </tr>
@@ -1643,7 +1642,7 @@
                 charts['p3-signal-distribution'].destroy();
             }
 
-            const signals = dashboardData.laomo_signals;
+            const signals = dashboardData.laomo_signals.signals || dashboardData.laomo_signals;
             const types = {};
 
             signals.forEach(s => {
@@ -1688,7 +1687,7 @@
                 charts['p3-monthly-signals'].destroy();
             }
 
-            const signals = dashboardData.laomo_signals;
+            const signals = dashboardData.laomo_signals.signals || dashboardData.laomo_signals;
             const months = {};
 
             signals.forEach(s => {
@@ -1763,13 +1762,13 @@
             const latest = etfData.date_records[etfData.date_records.length - 1] || {};
 
             document.getElementById('p4-kpi-holdings').textContent = latest.n_stocks || 0;
-            document.getElementById('p4-kpi-cash').textContent = `${(latest.cash_pct * 100).toFixed(1)}%`;
+            document.getElementById('p4-kpi-cash').textContent = `${latest.cash_pct?.toFixed(1)}%`;
             document.getElementById('p4-kpi-date').textContent = latest.date || '-';
 
             // Calculate top5 concentration
             if (latest.holdings) {
                 const top5Weight = latest.holdings.slice(0, 5).reduce((sum, h) => sum + h.weight, 0);
-                document.getElementById('p4-kpi-concentration').textContent = `${(top5Weight * 100).toFixed(1)}%`;
+                document.getElementById('p4-kpi-concentration').textContent = `${top5Weight?.toFixed(1)}%`;
             }
         }
 
@@ -1795,7 +1794,7 @@
                     datasets: [
                         {
                             label: '現金比例',
-                            data: last30.map(d => (d.cash_pct * 100).toFixed(1)),
+                            data: last30.map(d => d.cash_pct?.toFixed(1)),
                             borderColor: '#4f8ef7',
                             backgroundColor: 'rgba(79, 142, 247, 0.1)',
                             borderWidth: 2,
@@ -1915,7 +1914,7 @@
                 <tr>
                     <td>${holding.code}</td>
                     <td>${holding.name}</td>
-                    <td class="text-right">${(holding.weight * 100).toFixed(2)}%</td>
+                    <td class="text-right">${holding.weight?.toFixed(2)}%</td>
                 </tr>
             `).join('');
         }
@@ -1982,7 +1981,7 @@
 
             // Cash delta
             const cashDelta = record2.cash_pct - record1.cash_pct;
-            document.getElementById('p4-compare-cash-delta').textContent = `${(cashDelta * 100).toFixed(2)}%`;
+            document.getElementById('p4-compare-cash-delta').textContent = `${cashDelta?.toFixed(2)}%`;
             document.getElementById('p4-compare-cash-delta-arrow').innerHTML = cashDelta > 0 ? '📈 增加' : '📉 減少';
 
             // Holdings delta
@@ -2001,7 +2000,7 @@
                 <tr>
                     <td>${stock.code}</td>
                     <td>${stock.name}</td>
-                    <td class="text-right">${(stock.weight * 100).toFixed(2)}%</td>
+                    <td class="text-right">${stock.weight?.toFixed(2)}%</td>
                 </tr>
             `).join('');
         }
@@ -2016,9 +2015,9 @@
                     <tr>
                         <td>${stock.code}</td>
                         <td>${stock.name}</td>
-                        <td class="text-right">${(stock.weight1 * 100).toFixed(2)}%</td>
-                        <td class="text-right">${(stock.weight2 * 100).toFixed(2)}%</td>
-                        <td class="text-right"><span class="${deltaClass}">${stock.delta > 0 ? '+' : ''}${(stock.delta * 100).toFixed(2)}%</span></td>
+                        <td class="text-right">${stock.weight1?.toFixed(2)}%</td>
+                        <td class="text-right">${stock.weight2?.toFixed(2)}%</td>
+                        <td class="text-right"><span class="${deltaClass}">${stock.delta > 0 ? '+' : ''}${stock.delta?.toFixed(2)}%</span></td>
                     </tr>
                 `;
             }).join('');
