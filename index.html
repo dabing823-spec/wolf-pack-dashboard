@@ -803,8 +803,8 @@
     <header>
         <div class="logo">📊 JOY88 主動式 ETF 追蹤儀表板</div>
         <nav>
-            <button class="nav-btn active" data-page="p1">📊 ETF 持股追蹤</button>
-            <button class="nav-btn" data-page="p2">🎯 戰略儀表板</button>
+            <button class="nav-btn active" data-page="p2">🎯 戰略儀表板</button>
+            <button class="nav-btn" data-page="p1">📊 ETF 持股追蹤</button>
             <button class="nav-btn" data-page="p3">📋 老墨跟單策略</button>
             <button class="nav-btn" data-page="p4">🔍 歷史回溯</button>
             <button class="nav-btn" data-page="p5">🧠 策略分析</button>
@@ -815,7 +815,7 @@
     <div class="container">
 
         <!-- Page 1: ETF 持股追蹤 -->
-        <div class="page active" id="p1">
+        <div class="page" id="p1">
             <div class="page-title">📊 ETF 持股追蹤</div>
 
             <!-- Usage Guide -->
@@ -999,10 +999,39 @@
         </div>
 
         <!-- Page 2: 戰略儀表板 -->
-        <div class="page" id="p2">
+        <div class="page active" id="p2">
             <div class="page-title">🎯 戰略儀表板</div>
 
-            <!-- KPIs -->
+            <!-- Market Indices -->
+            <div class="kpi-grid" style="margin-bottom: 1rem;">
+                <div class="kpi-card">
+                    <div class="kpi-label">加權指數</div>
+                    <div class="kpi-value" id="p2-idx-taiex">-</div>
+                    <div class="kpi-subtext" id="p2-idx-taiex-sub">-</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-label">櫃買指數</div>
+                    <div class="kpi-value" id="p2-idx-tpex">-</div>
+                    <div class="kpi-subtext" id="p2-idx-tpex-sub">-</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-label">VIX 台灣</div>
+                    <div class="kpi-value" id="p2-idx-vixtwn">-</div>
+                    <div class="kpi-subtext" id="p2-idx-vixtwn-sub">-</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-label">VIX S&P500</div>
+                    <div class="kpi-value" id="p2-idx-vix">-</div>
+                    <div class="kpi-subtext" id="p2-idx-vix-sub">-</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-label">CNN 恐懼與貪婪</div>
+                    <div class="kpi-value" id="p2-idx-feargreed">-</div>
+                    <div class="kpi-subtext" id="p2-idx-feargreed-sub">-</div>
+                </div>
+            </div>
+
+            <!-- ETF KPIs -->
             <div class="kpi-grid">
                 <div class="kpi-card">
                     <div class="kpi-label">現金水位</div>
@@ -1519,8 +1548,8 @@
                 console.log('ETF Pages keys:', Object.keys(etfPagesData));
 
                 // Initialize dashboard
-                initializePage('p1');
-                renderPage('p1');
+                initializePage('p2');
+                renderPage('p2');
             } catch (error) {
                 console.error('Error loading data:', error);
                 showLoadingError();
@@ -2313,8 +2342,93 @@
         // ============================================================================
         // Page 2: 戰略儀表板
         // ============================================================================
+
+        async function renderMarketIndices() {
+            // Get TAIEX & TPEX from dashboard data
+            const cs = dashboardData.cash_series || (dashboardData.cash_mode || {}).cash_series || [];
+            const latest = cs.length ? cs[cs.length - 1] : {};
+            const prev = cs.length >= 2 ? cs[cs.length - 2] : {};
+
+            // TAIEX
+            const taiex = latest.taiex;
+            if (taiex) {
+                const taiexChg = prev.taiex ? taiex - prev.taiex : 0;
+                const taiexPct = prev.taiex ? (taiexChg / prev.taiex * 100) : 0;
+                document.getElementById('p2-idx-taiex').textContent = taiex.toFixed(0);
+                document.getElementById('p2-idx-taiex').style.color = taiexChg >= 0 ? 'var(--green)' : 'var(--red)';
+                document.getElementById('p2-idx-taiex-sub').textContent = `${taiexChg >= 0 ? '+' : ''}${taiexChg.toFixed(0)} (${taiexPct >= 0 ? '+' : ''}${taiexPct.toFixed(2)}%)`;
+            }
+
+            // TPEX
+            const tpex = latest.tpex;
+            if (tpex) {
+                const tpexChg = prev.tpex ? tpex - prev.tpex : 0;
+                const tpexPct = prev.tpex ? (tpexChg / prev.tpex * 100) : 0;
+                document.getElementById('p2-idx-tpex').textContent = tpex.toFixed(2);
+                document.getElementById('p2-idx-tpex').style.color = tpexChg >= 0 ? 'var(--green)' : 'var(--red)';
+                document.getElementById('p2-idx-tpex-sub').textContent = `${tpexChg >= 0 ? '+' : ''}${tpexChg.toFixed(2)} (${tpexPct >= 0 ? '+' : ''}${tpexPct.toFixed(2)}%)`;
+            }
+
+            // Fetch VIX + VIXTWN + Fear & Greed (live)
+            try {
+                // VIX (S&P 500) via Yahoo Finance
+                const vixRes = await fetch('https://query1.finance.yahoo.com/v8/finance/chart/%5EVIX?range=2d&interval=1d');
+                if (vixRes.ok) {
+                    const vixData = await vixRes.json();
+                    const closes = vixData.chart?.result?.[0]?.indicators?.quote?.[0]?.close || [];
+                    const vixNow = closes[closes.length - 1];
+                    const vixPrev = closes.length >= 2 ? closes[closes.length - 2] : vixNow;
+                    if (vixNow) {
+                        const vixChg = vixNow - vixPrev;
+                        document.getElementById('p2-idx-vix').textContent = vixNow.toFixed(2);
+                        document.getElementById('p2-idx-vix').style.color = vixNow >= 20 ? 'var(--red)' : vixNow >= 15 ? 'var(--orange)' : 'var(--green)';
+                        document.getElementById('p2-idx-vix-sub').textContent = `${vixChg >= 0 ? '+' : ''}${vixChg.toFixed(2)} | ${vixNow < 15 ? '低波動' : vixNow < 20 ? '正常' : vixNow < 30 ? '偏高' : '恐慌'}`;
+                    }
+                }
+            } catch (e) { console.warn('VIX fetch failed:', e); }
+
+            try {
+                // VIXTWN (台灣 VIX) via Yahoo Finance
+                const vtRes = await fetch('https://query1.finance.yahoo.com/v8/finance/chart/%5ETWVIX?range=2d&interval=1d');
+                if (vtRes.ok) {
+                    const vtData = await vtRes.json();
+                    const closes = vtData.chart?.result?.[0]?.indicators?.quote?.[0]?.close || [];
+                    const vtNow = closes[closes.length - 1];
+                    const vtPrev = closes.length >= 2 ? closes[closes.length - 2] : vtNow;
+                    if (vtNow) {
+                        const vtChg = vtNow - vtPrev;
+                        document.getElementById('p2-idx-vixtwn').textContent = vtNow.toFixed(2);
+                        document.getElementById('p2-idx-vixtwn').style.color = vtNow >= 20 ? 'var(--red)' : vtNow >= 15 ? 'var(--orange)' : 'var(--green)';
+                        document.getElementById('p2-idx-vixtwn-sub').textContent = `${vtChg >= 0 ? '+' : ''}${vtChg.toFixed(2)} | ${vtNow < 15 ? '低波動' : vtNow < 20 ? '正常' : vtNow < 30 ? '偏高' : '恐慌'}`;
+                    }
+                }
+            } catch (e) { console.warn('VIXTWN fetch failed:', e); }
+
+            try {
+                // CNN Fear & Greed Index
+                const fgRes = await fetch('https://production.dataviz.cnn.io/index/fearandgreed/graphdata');
+                if (fgRes.ok) {
+                    const fgData = await fgRes.json();
+                    const score = fgData.fear_and_greed?.score;
+                    const rating = fgData.fear_and_greed?.rating;
+                    const prevScore = fgData.fear_and_greed_historical?.previous_close;
+                    if (score != null) {
+                        const fgChg = prevScore != null ? score - prevScore : 0;
+                        document.getElementById('p2-idx-feargreed').textContent = Math.round(score);
+                        const fgColor = score <= 25 ? 'var(--red)' : score <= 45 ? 'var(--orange)' : score <= 55 ? 'var(--text)' : score <= 75 ? 'var(--green)' : '#00c48c';
+                        document.getElementById('p2-idx-feargreed').style.color = fgColor;
+                        const ratingMap = { 'Extreme Fear': '極度恐懼', 'Fear': '恐懼', 'Neutral': '中性', 'Greed': '貪婪', 'Extreme Greed': '極度貪婪' };
+                        document.getElementById('p2-idx-feargreed-sub').textContent = `${ratingMap[rating] || rating} | ${fgChg >= 0 ? '+' : ''}${fgChg.toFixed(0)}`;
+                    }
+                }
+            } catch (e) { console.warn('Fear & Greed fetch failed:', e); }
+        }
+
         function renderPage2() {
             if (!dashboardData) return;
+
+            // ── Market Indices ──
+            renderMarketIndices();
 
             const cashMode = dashboardData.cash_mode || {};
             const top5 = (dashboardData.top20_stocks || []).slice(0, 5);
