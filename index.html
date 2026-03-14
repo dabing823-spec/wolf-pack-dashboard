@@ -1041,6 +1041,14 @@
                 </div>
             </div>
 
+            <!-- Today Action List -->
+            <div class="table-container" style="margin-top: 1.25rem; margin-bottom: 1.25rem; border: 1px solid rgba(255,71,87,0.2);">
+                <div class="table-title" style="font-size: 1.05rem; background: rgba(255,71,87,0.06);">📋 今日跟單行動清單</div>
+                <div id="p2-action-list" style="padding: 1rem;">
+                    <div style="color: var(--text-muted);">載入中...</div>
+                </div>
+            </div>
+
             <!-- Gauges Row -->
             <div class="gauge-grid">
                 <div class="gauge-card">
@@ -2659,6 +2667,9 @@
             if (nExited) sigParts.push(`-${nExited} 出清`);
             document.getElementById('p2-kpi-signals-sub').textContent = sigParts.join(' | ') || latestChg.date || '-';
 
+            // Action List
+            renderP2ActionList(cashMode, dailyChg);
+
             // Gauges
             const top5 = (dashboardData.top20_stocks || []).slice(0, 5);
             const top5Weight = top5.reduce((sum, s) => sum + (s.weight || 0), 0);
@@ -2689,6 +2700,142 @@
                     ${label}<span class="gauge-ring-sublabel">${sublabel}</span>
                 </div>
             </div>`;
+        }
+
+        function renderP2ActionList(cashMode, dailyChg) {
+            const container = document.getElementById('p2-action-list');
+            if (!container) return;
+
+            const cashNow = cashMode.cash_now || 0;
+            const cashHigh = cashNow > 4;
+            const latestChg = dailyChg.length ? dailyChg[dailyChg.length - 1] : {};
+            const date = latestChg.date || dashboardData.report_date || '-';
+
+            function fmtAmt(v) {
+                if (!v) return '';
+                if (v >= 1e8) return (v / 1e8).toFixed(1) + '億';
+                if (v >= 1e4) return (v / 1e4).toFixed(0) + '萬';
+                return v.toLocaleString();
+            }
+
+            const buySignals = [];
+            const sellSignals = [];
+
+            // New positions → buy signals
+            (latestChg.new || []).forEach(s => {
+                const amt = s.est_amount ? ` ≈${fmtAmt(s.est_amount)}` : '';
+                const wr = cashHigh ? '83%' : '75%';
+                const ret = cashHigh ? '6.3%' : '5.15%';
+                const holdDays = 5;
+                const targetDate = new Date(date);
+                targetDate.setDate(targetDate.getDate() + holdDays);
+                const target = targetDate.toISOString().slice(5, 10).replace('-', '/');
+
+                buySignals.push({
+                    code: s.code, name: s.name, type: '新建倉',
+                    badge: 'badge-red', detail: amt,
+                    hold: `建議跟 ${holdDays} 天`, target: `目標持有到 ${target}`,
+                    winRate: `回測勝率 ${wr}`, returnRate: `報酬 ${ret}`,
+                    boost: cashHigh,
+                });
+            });
+
+            // Added positions → buy signals
+            (latestChg.added || []).forEach(s => {
+                const amt = s.est_amount ? ` ≈${fmtAmt(s.est_amount)}` : '';
+                const chg = s.weight_chg ? `+${s.weight_chg.toFixed(1)}%` : '';
+                const wr = cashHigh ? '70%' : '61%';
+                const ret = cashHigh ? '3.07%' : '1.71%';
+                const holdDays = 3;
+                const targetDate = new Date(date);
+                targetDate.setDate(targetDate.getDate() + holdDays);
+                const target = targetDate.toISOString().slice(5, 10).replace('-', '/');
+
+                buySignals.push({
+                    code: s.code, name: s.name, type: `加碼 ${chg}`,
+                    badge: 'badge-blue', detail: amt,
+                    hold: `建議跟 ${holdDays} 天`, target: `目標持有到 ${target}`,
+                    winRate: `回測勝率 ${wr}`, returnRate: `報酬 ${ret}`,
+                    boost: cashHigh,
+                });
+            });
+
+            // Exited → sell signals
+            (latestChg.exited || []).forEach(s => {
+                const amt = s.est_amount ? ` ≈${fmtAmt(s.est_amount)}` : '';
+                sellSignals.push({
+                    code: s.code, name: s.name, type: '出清',
+                    badge: 'badge-green', detail: amt,
+                });
+            });
+
+            // Reduced → sell signals
+            (latestChg.reduced || []).forEach(s => {
+                const amt = s.est_amount ? ` ≈${fmtAmt(s.est_amount)}` : '';
+                const chg = s.weight_chg ? `${s.weight_chg.toFixed(1)}%` : '';
+                sellSignals.push({
+                    code: s.code, name: s.name, type: `減碼 ${chg}`,
+                    badge: 'badge-orange', detail: amt,
+                });
+            });
+
+            let html = '';
+
+            // Date + cash status
+            html += `<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; padding-bottom:0.75rem; border-bottom:1px solid var(--border);">
+                <span style="color:var(--text-muted); font-size:0.9rem;">📅 資料日期：${date}</span>
+                ${cashHigh
+                    ? '<span style="background:rgba(255,71,87,0.12); color:var(--red); padding:4px 12px; border-radius:6px; font-size:0.85rem; font-weight:600;">📈 現金 ' + cashNow.toFixed(1) + '% — 跟單加分區！</span>'
+                    : '<span style="color:var(--text-muted); font-size:0.85rem;">現金 ' + cashNow.toFixed(1) + '%</span>'
+                }
+            </div>`;
+
+            // Buy signals
+            if (buySignals.length > 0) {
+                html += '<div style="margin-bottom:1rem;"><div style="font-weight:600; color:var(--red); margin-bottom:0.75rem; font-size:0.95rem;">🔴 買入信號</div>';
+                buySignals.forEach(s => {
+                    html += `<div style="background:rgba(255,71,87,0.04); border:1px solid rgba(255,71,87,0.15); border-radius:8px; padding:0.75rem 1rem; margin-bottom:0.5rem;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.4rem;">
+                            <span style="font-weight:600; font-size:1rem; color:var(--text);">${s.name}(${s.code})</span>
+                            <span class="badge ${s.badge}" style="font-size:0.85rem; padding:3px 10px;">${s.type}</span>
+                        </div>
+                        <div style="font-size:0.85rem; color:var(--text-secondary); line-height:1.8;">
+                            ${s.detail ? `<span style="color:var(--text-muted);">經理人投入${s.detail}</span><br>` : ''}
+                            → <strong>${s.hold}</strong>（${s.winRate}，${s.returnRate}）<br>
+                            → ${s.target}
+                            ${s.boost ? '<br><span style="color:var(--red);">📈 現金>4% 加分中，勝率與報酬皆提升</span>' : ''}
+                        </div>
+                    </div>`;
+                });
+                html += '</div>';
+            }
+
+            // Sell signals
+            if (sellSignals.length > 0) {
+                html += '<div style="margin-bottom:1rem;"><div style="font-weight:600; color:var(--green); margin-bottom:0.75rem; font-size:0.95rem;">🟢 賣出 / 觀望信號</div>';
+                sellSignals.forEach(s => {
+                    html += `<div style="background:rgba(0,196,140,0.04); border:1px solid rgba(0,196,140,0.15); border-radius:8px; padding:0.75rem 1rem; margin-bottom:0.5rem;">
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <span style="font-weight:600; color:var(--text);">${s.name}(${s.code})</span>
+                            <span class="badge ${s.badge}" style="font-size:0.85rem; padding:3px 10px;">${s.type}</span>
+                        </div>
+                        ${s.detail ? `<div style="font-size:0.85rem; color:var(--text-muted); margin-top:0.3rem;">經理人賣出${s.detail}</div>` : ''}
+                    </div>`;
+                });
+                html += '</div>';
+            }
+
+            // No signals
+            if (buySignals.length === 0 && sellSignals.length === 0) {
+                html += '<div style="text-align:center; padding:1.5rem; color:var(--text-muted);">今日無異動信號</div>';
+            }
+
+            // Summary
+            html += `<div style="font-size:0.8rem; color:var(--text-muted); padding-top:0.75rem; border-top:1px solid var(--border);">
+                ⚠️ 以上建議基於 00981A 持股異動回測（2025/10~12），跟單有統計優勢但不等於完整策略，需搭配基本面判斷。
+            </div>`;
+
+            container.innerHTML = html;
         }
 
         function updateP2Gauges(cashMode, top5Weight) {
