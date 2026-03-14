@@ -3065,7 +3065,7 @@
             const tbody = document.querySelector('#p3-table-signals tbody');
             if (!tbody) return;
 
-            const signals = dashboardData.laomo_signals.signals || dashboardData.laomo_signals;
+            const signals = (dashboardData.laomo_signals.signals || dashboardData.laomo_signals).slice().sort((a, b) => b.date.localeCompare(a.date));
             const filtered = filterSignalsByType(signals, currentFilter);
 
             tbody.innerHTML = filtered.map(signal => {
