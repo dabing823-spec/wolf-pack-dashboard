@@ -23,6 +23,8 @@
             --yellow: #ffc312;
             --purple: #a855f7;
             --cyan: #22d3ee;
+            --text-primary: #e4e6eb;
+            --text-secondary: #a0a3b5;
         }
 
         * {
@@ -1127,7 +1129,7 @@
                     </thead>
                     <tbody>
                         <tr style="background: rgba(255,71,87,0.04);">
-                            <td><span class="badge badge-green" style="font-size: 0.85rem; padding: 4px 12px;">新增</span></td>
+                            <td><span class="badge badge-red" style="font-size: 0.85rem; padding: 4px 12px;">新增</span></td>
                             <td>00981A 經理人新建倉</td>
                             <td>最強信號，觀察確認趨勢後介入</td>
                             <td style="text-align:center; font-weight:600; color:var(--red);">跟 5 天</td>
@@ -1145,7 +1147,7 @@
                             <td style="text-align:center; color:var(--text-muted);">—</td>
                         </tr>
                         <tr>
-                            <td><span class="badge badge-red" style="font-size: 0.85rem; padding: 4px 12px;">退出</span></td>
+                            <td><span class="badge badge-green" style="font-size: 0.85rem; padding: 4px 12px;">退出</span></td>
                             <td>00981A 完全出清</td>
                             <td>強烈賣出信號，及時出場</td>
                             <td style="text-align:center; color:var(--text-muted);">—</td>
@@ -1494,7 +1496,7 @@
                             <td class="text-right" style="color:var(--text-muted);">45.5%</td>
                         </tr>
                         <tr>
-                            <td><span class="badge badge-green">新增</span>（21 筆）</td>
+                            <td><span class="badge badge-red">新增</span>（21 筆）</td>
                             <td class="text-right" style="color:var(--red);">+2.21%</td>
                             <td class="text-right">61.9%</td>
                             <td class="text-right" style="color:var(--red); font-weight:600;">+5.15%</td>
@@ -1503,7 +1505,7 @@
                             <td class="text-right">68.8%</td>
                         </tr>
                         <tr style="background:rgba(255,71,87,0.08);">
-                            <td><span class="badge badge-green">新增</span> + 現金&gt;4%（6 筆）</td>
+                            <td><span class="badge badge-red">新增</span> + 現金&gt;4%（6 筆）</td>
                             <td class="text-right" style="color:var(--red);">+2.77%</td>
                             <td class="text-right">66.7%</td>
                             <td class="text-right" style="color:var(--red); font-weight:600;">+6.33%</td>
@@ -2949,7 +2951,7 @@
             });
 
             const typeLabels = { '新增': '新增', '加碼': '加碼', '減碼': '減碼', '退出': '退出' };
-            const colors = { '新增': '#00c48c', '加碼': '#4f8ef7', '減碼': '#ffa502', '退出': '#ff4757' };
+            const colors = { '新增': '#ff4757', '加碼': '#4f8ef7', '減碼': '#ffa502', '退出': '#00c48c' };
             const total = Object.values(types).reduce((a, b) => a + b, 0);
 
             charts['p3-signal-distribution'] = new Chart(ctx, {
@@ -3023,7 +3025,7 @@
             });
 
             const sortedMonths = Object.keys(monthTypes).sort();
-            const typeColors = { '新增': '#00c48c', '加碼': '#4f8ef7', '減碼': '#ffa502', '退出': '#ff4757' };
+            const typeColors = { '新增': '#ff4757', '加碼': '#4f8ef7', '減碼': '#ffa502', '退出': '#00c48c' };
             const allTypes = [...new Set(signals.map(s => s.type))];
 
             charts['p3-monthly-signals'] = new Chart(ctx, {
@@ -3519,10 +3521,10 @@
 
         function getSignalClass(type) {
             const typeMap = {
-                'new': 'badge-green', '新增': 'badge-green',
+                'new': 'badge-red', '新增': 'badge-red',
                 'added': 'badge-blue', '加碼': 'badge-blue',
                 'reduced': 'badge-orange', '減碼': 'badge-orange',
-                'exited': 'badge-red', '退出': 'badge-red',
+                'exited': 'badge-green', '退出': 'badge-green',
             };
             return typeMap[type] || 'badge-blue';
         }
