@@ -807,6 +807,7 @@
             <button class="nav-btn" data-page="p2">🎯 戰略儀表板</button>
             <button class="nav-btn" data-page="p3">📋 老墨跟單策略</button>
             <button class="nav-btn" data-page="p4">🔍 歷史回溯</button>
+            <button class="nav-btn" data-page="p5">🧠 策略分析</button>
         </nav>
     </header>
 
@@ -1282,6 +1283,134 @@
             </div>
         </div>
 
+        <!-- Page 5: 策略分析 -->
+        <div class="page" id="p5">
+            <div class="page-title">🧠 策略分析</div>
+
+            <!-- Section 1: 操作建議 TOP10 -->
+            <div class="table-container">
+                <div class="table-title">🎯 操作建議 TOP10</div>
+                <div class="table-scroll">
+                    <table id="p5-recommendations-table">
+                        <thead>
+                            <tr>
+                                <th>排名</th>
+                                <th>代碼</th>
+                                <th>名稱</th>
+                                <th>權重</th>
+                                <th>評分</th>
+                                <th>建議</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+                <div id="p5-factor-breakdown" style="margin-top: 1rem;"></div>
+            </div>
+
+            <!-- Section 2: 信號回測績效 -->
+            <div class="table-container">
+                <div class="table-title">📈 信號回測績效</div>
+                <div class="kpi-grid" id="p5-backtest-kpis"></div>
+                <div class="charts-row">
+                    <div class="chart-container">
+                        <div class="chart-title">信號類型勝率比較</div>
+                        <div class="chart-area" id="p5-backtest-bar-area">
+                            <canvas id="p5-backtest-bar-chart"></canvas>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <div class="chart-title">近期回測結果</div>
+                        <div class="table-scroll" style="max-height: 280px;">
+                            <table id="p5-backtest-signals-table">
+                                <thead>
+                                    <tr>
+                                        <th>日期</th>
+                                        <th>代碼</th>
+                                        <th>名稱</th>
+                                        <th>類型</th>
+                                        <th>10日報酬</th>
+                                        <th>20日報酬</th>
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section 3: 經理人風格分析 -->
+            <div class="table-container">
+                <div class="table-title">🧑‍💼 經理人風格分析</div>
+                <div class="charts-row">
+                    <div class="chart-container">
+                        <div class="chart-title">ETF 風格雷達圖</div>
+                        <div class="chart-area-lg" id="p5-radar-area">
+                            <canvas id="p5-radar-chart"></canvas>
+                        </div>
+                    </div>
+                    <div style="display: grid; grid-template-columns: 1fr; gap: 0.75rem;">
+                        <div id="p5-manager-cards" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 0.75rem;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section 4: 異動速度 & 共識趨勢 -->
+            <div class="charts-row">
+                <div class="table-container" style="margin-bottom: 0;">
+                    <div class="table-title">⚡ 異動速度</div>
+                    <div class="table-scroll">
+                        <table id="p5-velocity-table">
+                            <thead>
+                                <tr>
+                                    <th>代碼</th>
+                                    <th>名稱</th>
+                                    <th>5日速度</th>
+                                    <th>10日速度</th>
+                                    <th>加速度</th>
+                                    <th>信號</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="table-container" style="margin-bottom: 0;">
+                    <div class="table-title">📊 共識趨勢</div>
+                    <div class="table-scroll">
+                        <table id="p5-consensus-table">
+                            <thead>
+                                <tr>
+                                    <th>代碼</th>
+                                    <th>名稱</th>
+                                    <th>當前ETF數</th>
+                                    <th>趨勢</th>
+                                    <th>方向</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section 5: 產業曝險 -->
+            <div class="chart-container mt-2">
+                <div class="chart-title">🏭 產業曝險</div>
+                <div class="chart-area-lg" id="p5-industry-area">
+                    <canvas id="p5-industry-chart"></canvas>
+                </div>
+            </div>
+
+            <!-- Section 6: 持倉重疊熱力圖 -->
+            <div class="table-container mt-2">
+                <div class="table-title">🔗 持倉重疊熱力圖</div>
+                <div id="p5-heatmap-container"></div>
+                <div id="p5-heatmap-detail" style="margin-top: 1rem; display: none;"></div>
+            </div>
+        </div>
+
     </div>
 
     <script>
@@ -1290,6 +1419,7 @@
         // ============================================================================
         let dashboardData = null;
         let etfPagesData = null;
+        let strategyData = null;
         let currentPage = 'p1';
         let currentETF = '00981A';
         let currentFilter = 'all';
@@ -1315,6 +1445,17 @@
 
                 dashboardData = await dashRes.json();
                 etfPagesData = await etfRes.json();
+
+                // Load strategy data (optional)
+                try {
+                    const stratRes = await fetch(`data/strategy.json${cacheBust}`);
+                    if (stratRes.ok) {
+                        strategyData = await stratRes.json();
+                        console.log('Strategy data loaded');
+                    }
+                } catch (e) {
+                    console.warn('Strategy data not available:', e);
+                }
 
                 console.log('Data loaded successfully');
                 console.log('Dashboard keys:', Object.keys(dashboardData));
@@ -1413,6 +1554,9 @@
                     break;
                 case 'p4':
                     renderETFAnalysis();
+                    break;
+                case 'p5':
+                    renderPage5();
                     break;
             }
         }
@@ -2861,6 +3005,397 @@
 
             tbody.innerHTML = '';
             rows.forEach(row => tbody.appendChild(row));
+        }
+
+        // ============================================================================
+        // Page 5: 策略分析
+        // ============================================================================
+        function renderPage5() {
+            if (!strategyData) {
+                document.getElementById('p5').innerHTML = `
+                    <div class="page-title">🧠 策略分析</div>
+                    <div class="loading"><p style="color: var(--text-muted);">策略數據尚未載入 (data/strategy.json)</p></div>
+                `;
+                return;
+            }
+            renderP5Recommendations();
+            renderP5Backtest();
+            renderP5ManagerStyles();
+            renderP5VelocityConsensus();
+            renderP5IndustryExposure();
+            renderP5Heatmap();
+        }
+
+        // --- Section 1: 操作建議 TOP10 ---
+        function renderP5Recommendations() {
+            const recs = strategyData.recommendations || [];
+            const top10 = recs.slice(0, 10);
+            const tbody = document.querySelector('#p5-recommendations-table tbody');
+            tbody.innerHTML = top10.map((r, i) => {
+                const scoreBadge = r.score >= 8 ? 'badge-green' :
+                                   r.score >= 5 ? 'badge-blue' :
+                                   r.score >= 2 ? 'badge-yellow' : 'badge-red';
+                const recClass = r.recommendation === '強力買進' ? 'mode-attack' :
+                                 r.recommendation === '買進' ? 'mode-neutral' :
+                                 r.recommendation === '觀望' ? 'mode-defense' : 'mode-high-defense';
+                return `<tr>
+                    <td class="text-center">${i + 1}</td>
+                    <td>${r.code}</td>
+                    <td>${r.name}</td>
+                    <td class="text-right">${(r.current_weight || 0).toFixed(2)}%</td>
+                    <td class="text-center"><span class="badge ${scoreBadge}">${r.score.toFixed(1)}</span></td>
+                    <td><span class="mode-indicator ${recClass}" style="font-size:0.75rem; padding:0.25rem 0.6rem;">${r.recommendation}</span></td>
+                </tr>`;
+            }).join('');
+
+            // Factor breakdown
+            const factorDiv = document.getElementById('p5-factor-breakdown');
+            factorDiv.innerHTML = '<div style="font-size:0.85rem; color:var(--text-muted); margin-bottom:0.75rem;">因子分解</div>' +
+                '<div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap:0.75rem;">' +
+                top10.map(r => {
+                    const f = r.factors || {};
+                    const factors = [
+                        { name: '共識', val: f.consensus || 0, color: 'var(--accent)' },
+                        { name: '信念', val: f.conviction || 0, color: 'var(--purple)' },
+                        { name: '速度', val: f.velocity || 0, color: 'var(--green)' },
+                        { name: '現金', val: f.cash_mode || 0, color: 'var(--orange)' }
+                    ];
+                    const maxVal = Math.max(...factors.map(x => Math.abs(x.val)), 1);
+                    return `<div style="background:var(--card); border:1px solid var(--border); border-radius:8px; padding:0.75rem;">
+                        <div style="font-weight:600; font-size:0.8rem; margin-bottom:0.5rem;">${r.code} ${r.name}</div>
+                        ${factors.map(fac => `<div style="display:flex; align-items:center; gap:0.5rem; margin-bottom:0.25rem;">
+                            <span style="font-size:0.7rem; color:var(--text-muted); width:30px;">${fac.name}</span>
+                            <div style="flex:1; height:6px; background:var(--border); border-radius:3px; overflow:hidden;">
+                                <div style="height:100%; width:${Math.abs(fac.val) / maxVal * 100}%; background:${fac.color}; border-radius:3px;"></div>
+                            </div>
+                            <span style="font-size:0.7rem; color:var(--text-muted); width:28px; text-align:right;">${fac.val.toFixed(1)}</span>
+                        </div>`).join('')}
+                    </div>`;
+                }).join('') + '</div>';
+        }
+
+        // --- Section 2: 信號回測績效 ---
+        function renderP5Backtest() {
+            const bt = strategyData.signal_backtest || {};
+            const summary = bt.summary || {};
+
+            // KPIs
+            const kpiDiv = document.getElementById('p5-backtest-kpis');
+            kpiDiv.innerHTML = `
+                <div class="kpi-card">
+                    <div class="kpi-label">總信號數</div>
+                    <div class="kpi-value">${summary.total_signals || 0}</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-label">10日勝率</div>
+                    <div class="kpi-value" style="color: ${(summary.win_rate_10d || 0) >= 50 ? 'var(--green)' : 'var(--red)'}">
+                        ${(summary.win_rate_10d || 0).toFixed(1)}%
+                    </div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-label">20日勝率</div>
+                    <div class="kpi-value" style="color: ${(summary.win_rate_20d || 0) >= 50 ? 'var(--green)' : 'var(--red)'}">
+                        ${(summary.win_rate_20d || 0).toFixed(1)}%
+                    </div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-label">10日平均報酬</div>
+                    <div class="kpi-value" style="color: ${(summary.avg_return_10d || 0) >= 0 ? 'var(--green)' : 'var(--red)'}">
+                        ${(summary.avg_return_10d || 0).toFixed(2)}%
+                    </div>
+                </div>
+            `;
+
+            // Bar chart by type
+            const byType = bt.by_type || {};
+            const typeLabels = Object.keys(byType);
+            const typeWinRates = typeLabels.map(k => byType[k].win_rate_10d || 0);
+            const typeCounts = typeLabels.map(k => byType[k].count || 0);
+
+            if (charts.p5BacktestBar) charts.p5BacktestBar.destroy();
+            const ctx = document.getElementById('p5-backtest-bar-chart');
+            if (ctx) {
+                charts.p5BacktestBar = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: typeLabels.map(l => l === 'new' ? '新增' : l === 'add' ? '加碼' : l === 'reduce' ? '減碼' : l),
+                        datasets: [{
+                            label: '10日勝率 (%)',
+                            data: typeWinRates,
+                            backgroundColor: typeLabels.map((_, i) => ['rgba(79,142,247,0.7)', 'rgba(0,196,140,0.7)', 'rgba(255,165,2,0.7)', 'rgba(255,71,87,0.7)'][i % 4]),
+                            borderRadius: 6
+                        }]
+                    },
+                    options: {
+                        indexAxis: 'y',
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: {
+                                callbacks: {
+                                    afterLabel: (ctx) => `信號數: ${typeCounts[ctx.dataIndex]}`
+                                }
+                            }
+                        },
+                        scales: {
+                            x: { max: 100, grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#8b8fa3' } },
+                            y: { grid: { display: false }, ticks: { color: '#e4e6eb' } }
+                        }
+                    }
+                });
+            }
+
+            // Recent signals table
+            const signals = (bt.signals || []).slice(0, 20);
+            const stbody = document.querySelector('#p5-backtest-signals-table tbody');
+            stbody.innerHTML = signals.map(s => {
+                const r10Color = (s.return_10d || 0) >= 0 ? 'var(--green)' : 'var(--red)';
+                const r20Color = (s.return_20d || 0) >= 0 ? 'var(--green)' : 'var(--red)';
+                const typeLabel = s.type === 'new' ? '新增' : s.type === 'add' ? '加碼' : s.type === 'reduce' ? '減碼' : s.type;
+                return `<tr>
+                    <td>${s.date}</td>
+                    <td>${s.code}</td>
+                    <td>${s.name}</td>
+                    <td><span class="badge badge-blue">${typeLabel}</span></td>
+                    <td style="color:${r10Color}; text-align:right;">${(s.return_10d || 0).toFixed(2)}%</td>
+                    <td style="color:${r20Color}; text-align:right;">${(s.return_20d || 0).toFixed(2)}%</td>
+                </tr>`;
+            }).join('');
+        }
+
+        // --- Section 3: 經理人風格分析 ---
+        function renderP5ManagerStyles() {
+            const styles = strategyData.manager_styles || {};
+            const etfIds = Object.keys(styles);
+            if (etfIds.length === 0) return;
+
+            const dims = ['turnover_rate', 'avg_concentration', 'avg_n_stocks', 'change_frequency'];
+            const dimLabels = ['周轉率', '集中度', '持股數', '換股頻率'];
+            const colors = [
+                'rgba(79,142,247,0.7)', 'rgba(0,196,140,0.7)', 'rgba(255,165,2,0.7)',
+                'rgba(168,85,247,0.7)', 'rgba(255,71,87,0.7)'
+            ];
+
+            // Normalize each dimension to 0-100
+            const maxVals = dims.map(d => Math.max(...etfIds.map(id => Math.abs(styles[id][d] || 0)), 0.01));
+
+            const datasets = etfIds.map((id, i) => ({
+                label: id,
+                data: dims.map((d, j) => ((styles[id][d] || 0) / maxVals[j]) * 100),
+                backgroundColor: colors[i % 5].replace('0.7', '0.15'),
+                borderColor: colors[i % 5],
+                borderWidth: 2,
+                pointBackgroundColor: colors[i % 5]
+            }));
+
+            if (charts.p5Radar) charts.p5Radar.destroy();
+            const ctx = document.getElementById('p5-radar-chart');
+            if (ctx) {
+                charts.p5Radar = new Chart(ctx, {
+                    type: 'radar',
+                    data: { labels: dimLabels, datasets: datasets },
+                    options: {
+                        maintainAspectRatio: false,
+                        plugins: { legend: { labels: { color: '#e4e6eb' } } },
+                        scales: {
+                            r: {
+                                angleLines: { color: 'rgba(255,255,255,0.1)' },
+                                grid: { color: 'rgba(255,255,255,0.1)' },
+                                ticks: { display: false },
+                                pointLabels: { color: '#e4e6eb', font: { size: 12 } },
+                                suggestedMin: 0, suggestedMax: 100
+                            }
+                        }
+                    }
+                });
+            }
+
+            // Manager cards
+            const cardsDiv = document.getElementById('p5-manager-cards');
+            cardsDiv.innerHTML = etfIds.map((id, i) => {
+                const s = styles[id];
+                return `<div class="insight-card" style="border-left-color: ${colors[i % 5].replace('0.7', '1')}">
+                    <div class="insight-card-title">${id}</div>
+                    <div style="margin-bottom:0.5rem;">
+                        <span class="badge badge-purple">${s.style_label || '-'}</span>
+                    </div>
+                    <div class="insight-card-body">
+                        周轉率: ${(s.turnover_rate || 0).toFixed(1)}%<br>
+                        集中度: ${(s.avg_concentration || 0).toFixed(1)}%<br>
+                        平均持股: ${(s.avg_n_stocks || 0).toFixed(0)}<br>
+                        換股頻率: ${(s.change_frequency || 0).toFixed(1)}
+                    </div>
+                </div>`;
+            }).join('');
+        }
+
+        // --- Section 4: 異動速度 & 共識趨勢 ---
+        function renderP5VelocityConsensus() {
+            // Velocity table
+            const velocity = strategyData.velocity || [];
+            const vtbody = document.querySelector('#p5-velocity-table tbody');
+            vtbody.innerHTML = velocity.map(v => {
+                const signalBadge = v.signal === '急買' ? 'badge-green' :
+                                    v.signal === '急賣' ? 'badge-red' :
+                                    v.signal === '慢加' ? 'badge-blue' :
+                                    v.signal === '慢減' ? 'badge-orange' : 'badge-yellow';
+                return `<tr>
+                    <td>${v.code}</td>
+                    <td>${v.name}</td>
+                    <td class="text-right" style="color: ${(v.velocity_5d || 0) >= 0 ? 'var(--green)' : 'var(--red)'}">${(v.velocity_5d || 0).toFixed(3)}</td>
+                    <td class="text-right" style="color: ${(v.velocity_10d || 0) >= 0 ? 'var(--green)' : 'var(--red)'}">${(v.velocity_10d || 0).toFixed(3)}</td>
+                    <td class="text-right" style="color: ${(v.acceleration || 0) >= 0 ? 'var(--green)' : 'var(--red)'}">${(v.acceleration || 0).toFixed(3)}</td>
+                    <td><span class="badge ${signalBadge}">${v.signal}</span></td>
+                </tr>`;
+            }).join('');
+
+            // Consensus trends table
+            const consensus = strategyData.consensus_trends || [];
+            const ctbody = document.querySelector('#p5-consensus-table tbody');
+            ctbody.innerHTML = consensus.map(c => {
+                const trend = c.trend || [];
+                const dirArrow = c.direction === 'up' ? '↑' : c.direction === 'down' ? '↓' : '→';
+                const dirColor = c.direction === 'up' ? 'var(--green)' : c.direction === 'down' ? 'var(--red)' : 'var(--text-muted)';
+
+                // Mini sparkline SVG
+                let sparkSvg = '';
+                if (trend.length > 1) {
+                    const vals = trend.map(t => t.n_etfs);
+                    const maxV = Math.max(...vals, 1);
+                    const minV = Math.min(...vals, 0);
+                    const range = maxV - minV || 1;
+                    const w = 100, h = 24;
+                    const points = vals.map((v, i) => `${(i / (vals.length - 1)) * w},${h - ((v - minV) / range) * h}`).join(' ');
+                    const lineColor = c.direction === 'up' ? '#00c48c' : c.direction === 'down' ? '#ff4757' : '#8b8fa3';
+                    sparkSvg = `<svg width="${w}" height="${h}" style="vertical-align:middle;">
+                        <polyline points="${points}" fill="none" stroke="${lineColor}" stroke-width="1.5"/>
+                    </svg>`;
+                }
+
+                return `<tr>
+                    <td>${c.code}</td>
+                    <td>${c.name}</td>
+                    <td class="text-center">${c.current_n || 0}</td>
+                    <td>${sparkSvg}</td>
+                    <td style="color:${dirColor}; font-size:1.2rem; text-align:center;">${dirArrow}</td>
+                </tr>`;
+            }).join('');
+        }
+
+        // --- Section 5: 產業曝險 ---
+        function renderP5IndustryExposure() {
+            const industries = (strategyData.industry_exposure || []).sort((a, b) => (b.weight || 0) - (a.weight || 0));
+            if (industries.length === 0) return;
+
+            if (charts.p5Industry) charts.p5Industry.destroy();
+            const ctx = document.getElementById('p5-industry-chart');
+            if (ctx) {
+                charts.p5Industry = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: industries.map(ind => ind.industry),
+                        datasets: [{
+                            label: '權重 (%)',
+                            data: industries.map(ind => ind.weight || 0),
+                            backgroundColor: 'rgba(79,142,247,0.6)',
+                            borderColor: 'rgba(79,142,247,1)',
+                            borderWidth: 1,
+                            borderRadius: 4
+                        }]
+                    },
+                    options: {
+                        indexAxis: 'y',
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: {
+                                callbacks: {
+                                    afterLabel: (ctx) => {
+                                        const ind = industries[ctx.dataIndex];
+                                        return `${ind.n_stocks || 0} 檔 | Top: ${(ind.top_stocks || []).map(s => s.name).join(', ')}`;
+                                    }
+                                }
+                            }
+                        },
+                        scales: {
+                            x: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#8b8fa3', callback: v => v + '%' } },
+                            y: { grid: { display: false }, ticks: { color: '#e4e6eb', font: { size: 11 } } }
+                        }
+                    }
+                });
+            }
+        }
+
+        // --- Section 6: 持倉重疊熱力圖 ---
+        function renderP5Heatmap() {
+            const overlap = strategyData.holdings_overlap || {};
+            const matrix = overlap.matrix || [];
+            const etfIds = overlap.etf_ids || [];
+            const shared = overlap.shared_details || {};
+            if (matrix.length === 0 || etfIds.length === 0) return;
+
+            const maxCount = Math.max(...matrix.flat().filter((_, i) => true), 1);
+            const container = document.getElementById('p5-heatmap-container');
+
+            let html = '<table style="border-collapse:collapse; width:100%;">';
+            html += '<thead><tr><th style="background:var(--card);"></th>';
+            etfIds.forEach(id => {
+                html += `<th style="background:var(--card); text-align:center; padding:0.75rem; font-size:0.8rem;">${id}</th>`;
+            });
+            html += '</tr></thead><tbody>';
+
+            matrix.forEach((row, i) => {
+                html += `<tr><td style="padding:0.75rem; font-weight:600; font-size:0.8rem; color:var(--text); white-space:nowrap;">${etfIds[i]}</td>`;
+                row.forEach((val, j) => {
+                    const opacity = i === j ? 0.5 : (val / maxCount) * 0.8;
+                    const bg = `rgba(79,142,247,${opacity})`;
+                    const cursor = i !== j ? 'cursor:pointer;' : '';
+                    const pairKey = i < j ? `${etfIds[i]}_${etfIds[j]}` : `${etfIds[j]}_${etfIds[i]}`;
+                    html += `<td style="text-align:center; padding:0.75rem; background:${bg}; color:var(--text); font-weight:600; border:1px solid var(--border); ${cursor}"
+                        ${i !== j ? `onclick="showHeatmapDetail('${pairKey}', '${etfIds[i]}', '${etfIds[j]}')"` : ''}>
+                        ${val}
+                    </td>`;
+                });
+                html += '</tr>';
+            });
+            html += '</tbody></table>';
+            container.innerHTML = html;
+        }
+
+        function showHeatmapDetail(pairKey, etfA, etfB) {
+            const overlap = strategyData.holdings_overlap || {};
+            const shared = overlap.shared_details || {};
+            const stocks = shared[pairKey] || [];
+            const detailDiv = document.getElementById('p5-heatmap-detail');
+
+            if (stocks.length === 0) {
+                detailDiv.style.display = 'none';
+                return;
+            }
+
+            detailDiv.style.display = 'block';
+            detailDiv.innerHTML = `
+                <div style="font-weight:600; margin-bottom:0.75rem; color:var(--accent);">
+                    ${etfA} & ${etfB} 共同持股 (${stocks.length} 檔)
+                </div>
+                <div class="table-scroll" style="max-height:250px;">
+                    <table>
+                        <thead><tr>
+                            <th>代碼</th><th>名稱</th>
+                            <th class="text-right">${etfA} 權重</th>
+                            <th class="text-right">${etfB} 權重</th>
+                        </tr></thead>
+                        <tbody>
+                            ${stocks.map(s => `<tr>
+                                <td>${s.code}</td>
+                                <td>${s.name}</td>
+                                <td class="text-right">${(s.weight_i || 0).toFixed(2)}%</td>
+                                <td class="text-right">${(s.weight_j || 0).toFixed(2)}%</td>
+                            </tr>`).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            `;
         }
 
         // ============================================================================
