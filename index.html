@@ -601,6 +601,114 @@
             to { transform: rotate(360deg); }
         }
 
+        /* Zebra striping */
+        tbody tr:nth-child(even) {
+            background-color: rgba(26, 29, 40, 0.5);
+        }
+
+        /* Weight bar */
+        .weight-bar {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            justify-content: flex-end;
+        }
+
+        .weight-bar-bg {
+            width: 60px;
+            height: 6px;
+            background-color: var(--border);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .weight-bar-fill {
+            height: 100%;
+            border-radius: 3px;
+            transition: width 0.3s ease;
+        }
+
+        /* Circular gauge */
+        .gauge-ring {
+            position: relative;
+            width: 120px;
+            height: 120px;
+            margin: 0 auto 0.75rem;
+        }
+
+        .gauge-ring svg {
+            transform: rotate(-90deg);
+        }
+
+        .gauge-ring-track {
+            fill: none;
+            stroke: var(--border);
+            stroke-width: 8;
+        }
+
+        .gauge-ring-fill {
+            fill: none;
+            stroke-width: 8;
+            stroke-linecap: round;
+            transition: stroke-dashoffset 0.6s ease;
+        }
+
+        .gauge-ring-label {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 1.25rem;
+            font-weight: 700;
+            text-align: center;
+        }
+
+        .gauge-ring-sublabel {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            display: block;
+        }
+
+        /* Insight cards */
+        .insight-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1rem;
+        }
+
+        .insight-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1rem;
+            border-left: 4px solid var(--accent);
+        }
+
+        .insight-card-title {
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
+        }
+
+        .insight-card-body {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            line-height: 1.5;
+        }
+
+        /* ETF color dots */
+        .etf-dots {
+            display: flex;
+            gap: 3px;
+        }
+
+        .etf-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+
         /* Text Alignments */
         .text-right {
             text-align: right;
@@ -1263,15 +1371,22 @@
             const cashMode = dashboardData.cash_mode || {};
             const latest00981A = dashboardData.latest_holdings['00981A'] || {};
 
-            document.getElementById('p1-kpi-holdings').textContent = latest00981A.n_stocks || 0;
+            const holdings = latest00981A.n_stocks || 0;
+            const holdingsEl = document.getElementById('p1-kpi-holdings');
+            holdingsEl.textContent = holdings;
+            holdingsEl.style.color = holdings >= 40 ? 'var(--green)' : holdings >= 20 ? 'var(--accent)' : 'var(--orange)';
             document.getElementById('p1-kpi-holdings-trend').textContent = `${latest00981A.date || '-'}`;
 
             const cashPct = latest00981A.cash_pct || 0;
-            document.getElementById('p1-kpi-cash').textContent = `${cashPct.toFixed(1)}%`;
+            const cashEl = document.getElementById('p1-kpi-cash');
+            cashEl.textContent = `${cashPct.toFixed(1)}%`;
+            cashEl.style.color = cashPct >= 5 ? 'var(--red)' : cashPct >= 3 ? 'var(--orange)' : 'var(--green)';
             document.getElementById('p1-kpi-cash-trend').textContent = cashMode.trend || '-';
 
-            const hasFutures = cashMode.has_futures ? '有' : '無';
-            document.getElementById('p1-kpi-futures').textContent = hasFutures;
+            const hasFutures = cashMode.has_futures;
+            const futuresEl = document.getElementById('p1-kpi-futures');
+            futuresEl.textContent = hasFutures ? '有' : '無';
+            futuresEl.style.color = hasFutures ? 'var(--orange)' : 'var(--text-muted)';
             document.getElementById('p1-kpi-futures-trend').textContent = cashMode.futures_signal || '-';
 
             const modeClass = getModeClass(cashMode.mode);
@@ -1381,9 +1496,10 @@
                     datasets: [{
                         label: '持股數',
                         data: holdings,
-                        backgroundColor: '#4f8ef7',
-                        borderColor: '#4f8ef7',
-                        borderWidth: 1
+                        backgroundColor: ['#4f8ef7', '#00c48c', '#ffa502', '#a855f7', '#22d3ee'],
+                        borderColor: ['#4f8ef7', '#00c48c', '#ffa502', '#a855f7', '#22d3ee'],
+                        borderWidth: 1,
+                        borderRadius: 4
                     }]
                 },
                 options: {
@@ -1576,13 +1692,20 @@
                     return;
                 }
 
-                tbody.innerHTML = etfData.stocks.map(stock => `
-                    <tr>
+                const maxW = Math.max(...etfData.stocks.map(s => s.weight || 0), 1);
+                tbody.innerHTML = etfData.stocks.map(stock => {
+                    const w = stock.weight || 0;
+                    const pct = Math.min(100, (w / maxW) * 100);
+                    const barColor = w >= 5 ? 'var(--accent)' : w >= 2 ? 'var(--cyan)' : 'var(--text-muted)';
+                    return `<tr>
                         <td>${stock.code}</td>
                         <td>${stock.name}</td>
-                        <td class="text-right">${stock.weight?.toFixed(2)}%</td>
-                    </tr>
-                `).join('');
+                        <td class="text-right"><div class="weight-bar">
+                            <span>${w.toFixed(2)}%</span>
+                            <div class="weight-bar-bg"><div class="weight-bar-fill" style="width:${pct}%; background:${barColor};"></div></div>
+                        </div></td>
+                    </tr>`;
+                }).join('');
             });
         }
 
@@ -1646,47 +1769,49 @@
             renderP2ComprehensiveView();
         }
 
+        function makeGaugeRing(value, max, color, label, sublabel) {
+            const pct = Math.min(100, (value / max) * 100);
+            const r = 52;
+            const circ = 2 * Math.PI * r;
+            const offset = circ - (pct / 100) * circ;
+            return `<div class="gauge-ring">
+                <svg width="120" height="120" viewBox="0 0 120 120">
+                    <circle class="gauge-ring-track" cx="60" cy="60" r="${r}"/>
+                    <circle class="gauge-ring-fill" cx="60" cy="60" r="${r}"
+                        stroke="${color}" stroke-dasharray="${circ}" stroke-dashoffset="${offset}"/>
+                </svg>
+                <div class="gauge-ring-label" style="color:${color};">
+                    ${label}<span class="gauge-ring-sublabel">${sublabel}</span>
+                </div>
+            </div>`;
+        }
+
         function updateP2Gauges(cashMode, top5Weight) {
             cashMode = cashMode || dashboardData.cash_mode || {};
             top5Weight = top5Weight || 0;
 
-            // Cash Trend Gauge
+            // Cash Trend Gauge (max 10%)
             const cashNow = cashMode.cash_now || 0;
-            const trendEl = document.getElementById('p2-gauge-cash-trend');
-            const trendModeEl = document.getElementById('p2-gauge-cash-trend-mode');
-            trendEl.textContent = cashMode.trend || '-';
-            trendEl.style.fontSize = '1.2rem';
-            if (cashNow >= 5) {
-                trendModeEl.className = 'mode-indicator mode-defense';
-                trendModeEl.textContent = `現金 ${cashNow.toFixed(1)}% — 偏防守`;
-            } else if (cashNow >= 3) {
-                trendModeEl.className = 'mode-indicator mode-neutral';
-                trendModeEl.textContent = `現金 ${cashNow.toFixed(1)}% — 中性`;
-            } else {
-                trendModeEl.className = 'mode-indicator mode-attack';
-                trendModeEl.textContent = `現金 ${cashNow.toFixed(1)}% — 積極做多`;
-            }
+            const cashColor = cashNow >= 5 ? '#ff4757' : cashNow >= 3 ? '#ffa502' : '#00c48c';
+            const cashDesc = cashNow >= 5 ? '偏防守' : cashNow >= 3 ? '中性' : '積極做多';
+            const cashCard = document.querySelector('#p2-gauge-cash-trend').closest('.gauge-card');
+            cashCard.innerHTML = `<div class="gauge-title">現金水位</div>
+                ${makeGaugeRing(cashNow, 10, cashColor, cashNow.toFixed(1) + '%', cashDesc)}
+                <div style="font-size:0.8rem; color:var(--text-muted);">${cashMode.trend || '-'}</div>`;
 
-            // Concentration Gauge
-            const concEl = document.getElementById('p2-gauge-concentration');
-            const concModeEl = document.getElementById('p2-gauge-concentration-mode');
-            concEl.textContent = `${top5Weight.toFixed(1)}%`;
-            if (top5Weight >= 40) {
-                concModeEl.className = 'mode-indicator mode-high-defense';
-                concModeEl.textContent = '高度集中 — 重押少數標的';
-            } else if (top5Weight >= 30) {
-                concModeEl.className = 'mode-indicator mode-neutral';
-                concModeEl.textContent = '適度集中 — 正常配置';
-            } else {
-                concModeEl.className = 'mode-indicator mode-attack';
-                concModeEl.textContent = '分散配置 — 風險分散';
-            }
+            // Concentration Gauge (max 60%)
+            const concColor = top5Weight >= 40 ? '#ff4757' : top5Weight >= 30 ? '#ffa502' : '#00c48c';
+            const concDesc = top5Weight >= 40 ? '高度集中' : top5Weight >= 30 ? '適度集中' : '分散配置';
+            const concCard = document.querySelector('#p2-gauge-concentration').closest('.gauge-card');
+            concCard.innerHTML = `<div class="gauge-title">持股集中度 (Top5)</div>
+                ${makeGaugeRing(top5Weight, 60, concColor, top5Weight.toFixed(1) + '%', concDesc)}`;
 
-            // Manager Gauge
-            const modeClass = getModeClass(cashMode.mode);
-            document.getElementById('p2-gauge-manager').textContent = cashMode.mode || '-';
-            document.getElementById('p2-gauge-manager-mode').className = `mode-indicator ${modeClass}`;
-            document.getElementById('p2-gauge-manager-mode').textContent = cashMode.mode_desc || '-';
+            // Manager Gauge (cash as inverse: low cash = high attack)
+            const attackPct = Math.max(0, 100 - cashNow * 10); // 0% cash = 100% attack
+            const mgrColor = cashNow <= 2 ? '#4f8ef7' : cashNow <= 5 ? '#00c48c' : '#ffa502';
+            const mgrCard = document.querySelector('#p2-gauge-manager').closest('.gauge-card');
+            mgrCard.innerHTML = `<div class="gauge-title">經理人動向</div>
+                ${makeGaugeRing(attackPct, 100, mgrColor, cashMode.mode || '-', cashMode.mode_desc || '-')}`;
         }
 
         function renderP2ConsensusTable() {
@@ -1697,14 +1822,20 @@
 
             const consensus = dashboardData.consensus.slice(0, 15);
 
-            tbody.innerHTML = consensus.map(item => `
-                <tr>
+            const etfColorMap = {'00981A':'#4f8ef7','00980A':'#00c48c','00982A':'#ffa502','00991A':'#a855f7','00993A':'#22d3ee'};
+            tbody.innerHTML = consensus.map(item => {
+                const dots = (item.etf_list || []).map(e =>
+                    `<span class="etf-dot" style="background:${etfColorMap[e] || '#666'}" title="${e}"></span>`
+                ).join('');
+                const w = (item.avg_weight || item.total_weight || 0);
+                const wColor = w >= 5 ? 'var(--green)' : w >= 2 ? 'var(--accent)' : 'var(--text-muted)';
+                return `<tr>
                     <td>${item.code}</td>
                     <td>${item.name}</td>
-                    <td class="text-right">${(item.avg_weight || item.total_weight || 0).toFixed(1)}%</td>
-                    <td class="text-right"><span class="badge badge-blue">${item.n_etfs} 檔</span></td>
-                </tr>
-            `).join('');
+                    <td class="text-right" style="color:${wColor}; font-weight:600;">${w.toFixed(1)}%</td>
+                    <td class="text-right"><div class="etf-dots" style="justify-content:flex-end;">${dots}</div><span style="font-size:0.75rem; color:var(--text-muted);">${item.n_etfs}檔</span></td>
+                </tr>`;
+            }).join('');
         }
 
         function renderP2SignalCards() {
@@ -1803,7 +1934,14 @@
                 insights.push(`${cashMode.futures_signal}`);
             }
 
-            const html = insights.map((line, i) => `<p style="margin-bottom: 0.75rem;">${i + 1}. ${line}</p>`).join('');
+            const icons = ['📡', '✨', '📊', '🤝', '📈', '⚠️'];
+            const colors = ['var(--accent)', 'var(--green)', 'var(--orange)', 'var(--purple)', 'var(--cyan)', 'var(--yellow)'];
+            const html = `<div class="insight-grid">${insights.map((line, i) => `
+                <div class="insight-card" style="border-left-color:${colors[i % colors.length]};">
+                    <div class="insight-card-title">${icons[i % icons.length]} ${line.match(/<strong>(.*?)<\/strong>/)?.[1] || ''}</div>
+                    <div class="insight-card-body">${line.replace(/<strong>.*?<\/strong>[:：]?\s*/, '')}</div>
+                </div>
+            `).join('')}</div>`;
             document.getElementById('p2-comprehensive-view').innerHTML = html;
         }
 
@@ -1831,13 +1969,16 @@
                 const typeBadge = getSignalBadge(signal.type);
                 const confidenceStars = signal.confidence || '-';
 
+                const chg = signal.weight_chg || 0;
+                const chgClass = chg > 0 ? 'delta-up' : chg < 0 ? 'delta-down' : '';
+
                 return `
                     <tr>
                         <td>${signal.date}</td>
                         <td><span class="badge ${typeClass}">${typeBadge}</span></td>
                         <td>${signal.code}</td>
                         <td>${signal.name}</td>
-                        <td class="text-right">${signal.weight_chg > 0 ? '+' : ''}${signal.weight_chg?.toFixed(2)}%</td>
+                        <td class="text-right"><span class="${chgClass}">${chg > 0 ? '+' : ''}${chg.toFixed(2)}%</span></td>
                         <td class="text-right">${confidenceStars || '-'}</td>
                         <td>${signal.hold_suggestion || '-'}</td>
                     </tr>
@@ -1979,14 +2120,24 @@
         function renderP4KPIs(etfData) {
             const latest = etfData.date_records[etfData.date_records.length - 1] || {};
 
-            document.getElementById('p4-kpi-holdings').textContent = latest.n_stocks || 0;
-            document.getElementById('p4-kpi-cash').textContent = `${latest.cash_pct?.toFixed(1)}%`;
+            const nStocks = latest.n_stocks || 0;
+            const p4HoldEl = document.getElementById('p4-kpi-holdings');
+            p4HoldEl.textContent = nStocks;
+            p4HoldEl.style.color = nStocks >= 40 ? 'var(--green)' : nStocks >= 20 ? 'var(--accent)' : 'var(--orange)';
+
+            const p4Cash = latest.cash_pct || 0;
+            const p4CashEl = document.getElementById('p4-kpi-cash');
+            p4CashEl.textContent = `${p4Cash.toFixed(1)}%`;
+            p4CashEl.style.color = p4Cash >= 5 ? 'var(--red)' : p4Cash >= 3 ? 'var(--orange)' : 'var(--green)';
+
             document.getElementById('p4-kpi-date').textContent = latest.date || '-';
 
             // Calculate top5 concentration
             if (latest.holdings) {
                 const top5Weight = latest.holdings.slice(0, 5).reduce((sum, h) => sum + h.weight, 0);
-                document.getElementById('p4-kpi-concentration').textContent = `${top5Weight?.toFixed(1)}%`;
+                const p4ConcEl = document.getElementById('p4-kpi-concentration');
+                p4ConcEl.textContent = `${top5Weight.toFixed(1)}%`;
+                p4ConcEl.style.color = top5Weight >= 40 ? 'var(--red)' : top5Weight >= 30 ? 'var(--orange)' : 'var(--green)';
             }
         }
 
@@ -2128,13 +2279,20 @@
                 return;
             }
 
-            tbody.innerHTML = latest.holdings.map(holding => `
-                <tr>
+            const maxW = Math.max(...latest.holdings.map(h => h.weight || 0), 1);
+            tbody.innerHTML = latest.holdings.map(holding => {
+                const w = holding.weight || 0;
+                const pct = Math.min(100, (w / maxW) * 100);
+                const barColor = w >= 5 ? 'var(--accent)' : w >= 2 ? 'var(--cyan)' : 'var(--text-muted)';
+                return `<tr>
                     <td>${holding.code}</td>
                     <td>${holding.name}</td>
-                    <td class="text-right">${holding.weight?.toFixed(2)}%</td>
-                </tr>
-            `).join('');
+                    <td class="text-right"><div class="weight-bar">
+                        <span>${w.toFixed(2)}%</span>
+                        <div class="weight-bar-bg"><div class="weight-bar-fill" style="width:${pct}%; background:${barColor};"></div></div>
+                    </div></td>
+                </tr>`;
+            }).join('');
         }
 
         function populateComparisonSelects(etfData) {
