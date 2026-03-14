@@ -195,11 +195,18 @@ def _parse_981a_xlsx(fp, date_str):
             name = str(r[1]).strip() if len(r) > 1 and r[1] else ''
             # Weight is in column 4 (index 3) = '持股權重'
             weight = parse_pct(r[3]) if len(r) > 3 else 0
+            shares = 0
+            if len(r) > 2 and r[2]:
+                try:
+                    shares = int(str(r[2]).replace(',', '').replace(' ', ''))
+                except (ValueError, TypeError):
+                    pass
             if weight > 0:
                 holdings.append({
                     'code': code,
                     'name': name,
-                    'weight': round(weight, 2)
+                    'weight': round(weight, 2),
+                    'shares': shares,
                 })
 
     return {
@@ -723,28 +730,68 @@ def generate():
     v5['conviction'] = calc_conviction(records_981a, dates_981a)
     v5['consensus'] = calc_consensus(all_data, dates_981a)
 
-    # Daily changes (last 10)
+    # Daily changes (last 10) — with shares change & estimated amount
+    # Get NAV for amount estimation: shares_chg * weight% * NAV * total_units / shares
     changes_list = []
     for i in range(max(0, len(dates_981a)-10), len(dates_981a)):
         dt = dates_981a[i]
-        curr_map = {h['code']: h for h in records_981a[dt].get('holdings', [])}
+        rec = records_981a[dt]
+        curr_holdings = rec.get('holdings', [])
+        curr_map = {h['code']: h for h in curr_holdings}
+        nav = rec.get('nav', 0) or 0
+        total_units = rec.get('units_outstanding', 0) or 0
+        # Total fund value in NTD
+        fund_value = nav * total_units if nav and total_units else 0
+
         day = {'date': dt, 'new': [], 'added': [], 'reduced': [], 'exited': [],
-               'cash_pct': cs[i]['cash_pct']}
+               'cash_pct': cs[i]['cash_pct'], 'nav': nav, 'fund_value': round(fund_value)}
 
         if i > 0:
             prev_map = {h['code']: h for h in records_981a[dates_981a[i-1]].get('holdings', [])}
             for code, h in curr_map.items():
+                shares_now = h.get('shares', 0)
                 if code not in prev_map:
-                    day['new'].append({'code': code, 'name': h['name'], 'weight': round(h['weight'], 2)})
+                    # New position — estimate amount from weight * fund_value
+                    est_amt = round(h['weight'] / 100 * fund_value) if fund_value else 0
+                    day['new'].append({
+                        'code': code, 'name': h['name'],
+                        'weight': round(h['weight'], 2),
+                        'shares': shares_now,
+                        'est_amount': est_amt,
+                    })
                 else:
-                    chg = h['weight'] - prev_map[code]['weight']
+                    prev_h = prev_map[code]
+                    chg = h['weight'] - prev_h['weight']
+                    shares_prev = prev_h.get('shares', 0)
+                    shares_chg = shares_now - shares_prev
+                    # Estimate amount of the change: weight_chg% * fund_value
+                    est_amt = round(abs(chg) / 100 * fund_value) if fund_value else 0
                     if chg > 0.1:
-                        day['added'].append({'code': code, 'name': h['name'], 'weight': round(h['weight'], 2), 'weight_chg': round(chg, 2)})
+                        day['added'].append({
+                            'code': code, 'name': h['name'],
+                            'weight': round(h['weight'], 2),
+                            'weight_chg': round(chg, 2),
+                            'shares_chg': shares_chg,
+                            'est_amount': est_amt,
+                        })
                     elif chg < -0.1:
-                        day['reduced'].append({'code': code, 'name': h['name'], 'weight': round(h['weight'], 2), 'weight_chg': round(chg, 2)})
+                        day['reduced'].append({
+                            'code': code, 'name': h['name'],
+                            'weight': round(h['weight'], 2),
+                            'weight_chg': round(chg, 2),
+                            'shares_chg': shares_chg,
+                            'est_amount': est_amt,
+                        })
             for code, h in prev_map.items():
                 if code not in curr_map:
-                    day['exited'].append({'code': code, 'name': h['name']})
+                    shares_prev = h.get('shares', 0)
+                    est_amt = round(h['weight'] / 100 * fund_value) if fund_value else 0
+                    day['exited'].append({
+                        'code': code, 'name': h['name'],
+                        'weight': round(h.get('weight', 0), 2),
+                        'shares': shares_prev,
+                        'est_amount': est_amt,
+                    })
         changes_list.append(day)
     v5['daily_changes'] = {'00981A': changes_list}
 

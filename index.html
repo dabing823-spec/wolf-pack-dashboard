@@ -2209,17 +2209,42 @@
                 return;
             }
 
+            function fmtAmt(v) {
+                if (!v) return '';
+                if (v >= 1e8) return (v / 1e8).toFixed(1) + '億';
+                if (v >= 1e4) return (v / 1e4).toFixed(0) + '萬';
+                return v.toLocaleString();
+            }
+
             const rows = changes.map(day => {
                 const items = [];
-                (day.new || []).forEach(s => items.push(`<span style="color:#00c48c; font-weight:500;">+${s.name}</span>`));
-                (day.exited || []).forEach(s => items.push(`<span style="color:#ff4757; font-weight:500;">-${s.name}</span>`));
-                (day.added || []).forEach(s => items.push(`<span style="color:#4f8ef7;">▲${s.name}<span style="font-size:0.7rem; opacity:0.7;">(${s.weight_chg > 0 ? '+' : ''}${s.weight_chg.toFixed(1)}%)</span></span>`));
-                (day.reduced || []).forEach(s => items.push(`<span style="color:#ffa502;">▼${s.name}<span style="font-size:0.7rem; opacity:0.7;">(${s.weight_chg.toFixed(1)}%)</span></span>`));
+                (day.new || []).forEach(s => {
+                    const amt = s.est_amount ? ` ≈${fmtAmt(s.est_amount)}` : '';
+                    items.push(`<span style="color:#ff4757; font-weight:500;">+${s.name}<span style="font-size:0.7rem; opacity:0.7;">${amt}</span></span>`);
+                });
+                (day.exited || []).forEach(s => {
+                    const amt = s.est_amount ? ` ≈${fmtAmt(s.est_amount)}` : '';
+                    items.push(`<span style="color:#00c48c; font-weight:500;">-${s.name}<span style="font-size:0.7rem; opacity:0.7;">${amt}</span></span>`);
+                });
+                (day.added || []).forEach(s => {
+                    const amt = s.est_amount ? ` ≈${fmtAmt(s.est_amount)}` : '';
+                    items.push(`<span style="color:#ff4757;">▲${s.name}<span style="font-size:0.7rem; opacity:0.7;">(${s.weight_chg > 0 ? '+' : ''}${s.weight_chg.toFixed(1)}%${amt})</span></span>`);
+                });
+                (day.reduced || []).forEach(s => {
+                    const amt = s.est_amount ? ` ≈${fmtAmt(s.est_amount)}` : '';
+                    items.push(`<span style="color:#00c48c;">▼${s.name}<span style="font-size:0.7rem; opacity:0.7;">(${s.weight_chg.toFixed(1)}%${amt})</span></span>`);
+                });
                 if (!items.length) return '';
+
+                // Day total
+                const dayTotal = [...(day.new||[]), ...(day.added||[])].reduce((sum, s) => sum + (s.est_amount || 0), 0)
+                    - [...(day.exited||[]), ...(day.reduced||[])].reduce((sum, s) => sum + (s.est_amount || 0), 0);
+                const totalStr = dayTotal ? `<span style="color:var(--text-muted); font-size:0.7rem; margin-left:auto; white-space:nowrap;">淨 ${dayTotal >= 0 ? '+' : ''}${fmtAmt(Math.abs(dayTotal))}</span>` : '';
 
                 return `<div style="display:flex; gap:0.75rem; align-items:baseline; padding:0.35rem 0; border-bottom:1px solid rgba(255,255,255,0.04); font-size:0.8rem;">
                     <span style="color:var(--text-muted); font-family:monospace; min-width:80px;">${day.date}</span>
-                    <div style="display:flex; flex-wrap:wrap; gap:0.4rem 0.75rem;">${items.join('')}</div>
+                    <div style="display:flex; flex-wrap:wrap; gap:0.4rem 0.75rem; flex:1;">${items.join('')}</div>
+                    ${totalStr}
                 </div>`;
             }).filter(Boolean);
 
