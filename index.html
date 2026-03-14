@@ -36,6 +36,7 @@
             background-color: var(--bg);
             color: var(--text);
             line-height: 1.6;
+            font-size: 15px;
         }
 
         /* Header */
@@ -1113,66 +1114,76 @@
         <div class="page" id="p3">
             <div class="page-title">📋 老墨跟單策略</div>
 
-            <!-- Strategy Explanation -->
-            <div class="strategy-section">
-                <div class="highlight">
-                    <strong>策略概述：</strong>老墨跟單策略基於技術分析和市場共識，自動追蹤多檔優質ETF中的關鍵持股變動，並給出明確的操作信號。
+            <!-- Strategy Overview Cards -->
+            <div class="insight-grid" style="grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
+                <div class="insight-card" style="border-left-color: var(--accent);">
+                    <div class="insight-card-title">📌 策略邏輯</div>
+                    <div class="insight-card-body" style="font-size: 0.95rem; line-height: 1.8;">
+                        追蹤 00981A 經理人的持股異動，<strong>當經理人新增或加碼某檔股票</strong>，視為偏多信號。
+                        結合現金水位判斷經理人的攻防態度，輔助短線操作決策。
+                    </div>
                 </div>
-                <div class="warning">
-                    <strong>風險提示：</strong>投資有風險，過往表現不代表未來走勢。本策略僅供參考，請根據自身風險承受能力謹慎操作。
-                </div>
-                <div class="tip">
-                    <strong>操作建議：</strong>關注高信心度信號，結合個股基本面分析，分批建倉，設置合理止損。
+                <div class="insight-card" style="border-left-color: var(--orange);">
+                    <div class="insight-card-title">⚠️ 使用須知</div>
+                    <div class="insight-card-body" style="font-size: 0.95rem; line-height: 1.8;">
+                        跟單有統計優勢但<strong>不等於完整策略</strong>。需搭配個股基本面、產業趨勢。
+                        投資有風險，過往表現不代表未來走勢。
+                    </div>
                 </div>
             </div>
 
-            <!-- Strategy Rules Table -->
-            <div class="table-container">
-                <div class="table-title">策略規則</div>
+            <!-- Strategy Rules -->
+            <div class="table-container" style="margin-bottom: 1.5rem;">
+                <div class="table-title" style="font-size: 1rem;">信號定義與操作建議</div>
                 <table>
                     <thead>
                         <tr>
-                            <th>信號類型</th>
-                            <th>定義</th>
+                            <th style="width: 100px;">信號</th>
+                            <th>觸發條件</th>
                             <th>操作建議</th>
+                            <th style="width: 90px;">建議天數</th>
                         </tr>
                     </thead>
                     <tbody>
-                        <tr>
-                            <td><span class="badge badge-green">新增</span></td>
-                            <td>00981A 新進入持股</td>
-                            <td>觀察建倉，確認趨勢後介入</td>
+                        <tr style="background: rgba(255,71,87,0.04);">
+                            <td><span class="badge badge-green" style="font-size: 0.85rem; padding: 4px 12px;">新增</span></td>
+                            <td>00981A 經理人新建倉</td>
+                            <td>最強信號，觀察確認趨勢後介入</td>
+                            <td style="text-align:center; font-weight:600; color:var(--red);">跟 5 天</td>
                         </tr>
                         <tr>
-                            <td><span class="badge badge-blue">加碼</span></td>
-                            <td>00981A 持股權重上升</td>
-                            <td>偏多信號，可逢低加碼</td>
+                            <td><span class="badge badge-blue" style="font-size: 0.85rem; padding: 4px 12px;">加碼</span></td>
+                            <td>持股權重上升 &gt;0.1%</td>
+                            <td>偏多信號，可逢低跟進</td>
+                            <td style="text-align:center; font-weight:600; color:var(--accent);">跟 3 天</td>
                         </tr>
                         <tr>
-                            <td><span class="badge badge-orange">減碼</span></td>
-                            <td>00981A 持股權重下降</td>
+                            <td><span class="badge badge-orange" style="font-size: 0.85rem; padding: 4px 12px;">減碼</span></td>
+                            <td>持股權重下降 &gt;0.1%</td>
                             <td>風險警訊，考慮獲利了結</td>
+                            <td style="text-align:center; color:var(--text-muted);">—</td>
                         </tr>
                         <tr>
-                            <td><span class="badge badge-red">退出</span></td>
-                            <td>00981A 退出持股</td>
-                            <td>強烈賣出信號，應及時出場</td>
+                            <td><span class="badge badge-red" style="font-size: 0.85rem; padding: 4px 12px;">退出</span></td>
+                            <td>00981A 完全出清</td>
+                            <td>強烈賣出信號，及時出場</td>
+                            <td style="text-align:center; color:var(--text-muted);">—</td>
                         </tr>
                     </tbody>
                 </table>
             </div>
 
             <!-- Filters -->
-            <div class="filter-buttons">
-                <button class="filter-btn active" onclick="filterSignals('all')">全部</button>
-                <button class="filter-btn" onclick="filterSignals('new')">新增</button>
-                <button class="filter-btn" onclick="filterSignals('added')">加碼</button>
-                <button class="filter-btn" onclick="filterSignals('★★★')">⭐⭐⭐</button>
+            <div style="display: flex; gap: 0.5rem; margin-bottom: 1rem; flex-wrap: wrap;">
+                <button class="filter-btn active" onclick="filterSignals('all')" style="font-size: 0.9rem; padding: 0.5rem 1rem;">全部</button>
+                <button class="filter-btn" onclick="filterSignals('new')" style="font-size: 0.9rem; padding: 0.5rem 1rem;">🆕 新增</button>
+                <button class="filter-btn" onclick="filterSignals('added')" style="font-size: 0.9rem; padding: 0.5rem 1rem;">▲ 加碼</button>
+                <button class="filter-btn" onclick="filterSignals('★★★')" style="font-size: 0.9rem; padding: 0.5rem 1rem;">⭐⭐⭐ 高信心</button>
             </div>
 
             <!-- Signals Table -->
-            <div class="table-container">
-                <div class="table-title">跟單信號</div>
+            <div class="table-container" style="margin-bottom: 1.5rem;">
+                <div class="table-title" style="font-size: 1rem;">跟單信號紀錄</div>
                 <div class="table-scroll" style="max-height: 500px;">
                 <table id="p3-table-signals">
                     <thead>
