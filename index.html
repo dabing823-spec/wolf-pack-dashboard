@@ -7,6 +7,7 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.1" integrity="sha384-jb8JQMbMoBUzgWatfe6COACi2ljcDdZQ2OxczGA3bGNeWe+6DChMTBJemed7ZnvJ" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/hammerjs@2.0.8"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.2.0"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3.1.0"></script>
     <style>
         :root {
             --bg: #0f1117;
@@ -196,18 +197,58 @@
 
         @media (max-width: 768px) {
             .container {
-                padding: 1rem;
+                padding: 0.75rem;
             }
 
             header {
-                padding: 1rem;
+                padding: 0.75rem;
                 flex-direction: column;
-                gap: 1rem;
+                gap: 0.5rem;
             }
 
             nav {
                 width: 100%;
                 justify-content: center;
+            }
+
+            nav button {
+                padding: 0.4rem 0.8rem;
+                font-size: 0.8rem;
+            }
+
+            .chart-area, .chart-area-lg {
+                height: 220px !important;
+            }
+
+            .gauge-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .gauge-ring {
+                width: 90px;
+                height: 90px;
+            }
+
+            .gauge-ring svg {
+                width: 90px;
+                height: 90px;
+            }
+
+            .insight-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .weight-bar-bg {
+                width: 40px;
+            }
+
+            .filter-btn {
+                padding: 0.3rem 0.6rem;
+                font-size: 0.75rem;
+            }
+
+            .sparkline-container svg {
+                width: 80px;
             }
 
             .kpi-grid {
@@ -765,7 +806,7 @@
             <button class="nav-btn active" data-page="p1">📊 ETF 持股追蹤</button>
             <button class="nav-btn" data-page="p2">🎯 戰略儀表板</button>
             <button class="nav-btn" data-page="p3">📋 老墨跟單策略</button>
-            <button class="nav-btn" data-page="p4">🔍 ETF 個別分析</button>
+            <button class="nav-btn" data-page="p4">🔍 歷史回溯</button>
         </nav>
     </header>
 
@@ -798,6 +839,15 @@
                     <div class="kpi-value" id="p1-kpi-mode">-</div>
                     <div class="kpi-subtext" id="p1-kpi-mode-desc">-</div>
                 </div>
+            </div>
+
+            <!-- Today Summary -->
+            <div id="p1-today-summary" class="strategy-section" style="margin-bottom: 2rem; padding: 1.25rem; display: none;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+                    <div class="chart-title" style="margin-bottom: 0;">📌 今日摘要</div>
+                    <div id="p1-summary-date" style="font-size: 0.8rem; color: var(--text-muted);"></div>
+                </div>
+                <div id="p1-summary-content" class="insight-grid" style="grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 0.75rem;"></div>
             </div>
 
             <!-- Charts Row 1 -->
@@ -1117,7 +1167,7 @@
 
         <!-- Page 4: ETF 個別分析 -->
         <div class="page" id="p4">
-            <div class="page-title">🔍 ETF 個別分析</div>
+            <div class="page-title">🔍 ETF 歷史回溯與對比</div>
 
             <!-- ETF Sub-tabs -->
             <div class="tabs" id="p4-etf-tabs">
@@ -1160,20 +1210,11 @@
                 </div>
             </div>
 
-            <!-- Holdings Table -->
+            <!-- Recent Changes Timeline -->
             <div class="table-container">
-                <div class="table-title">完整持股明細</div>
-                <div class="table-scroll">
-                <table id="p4-table-holdings">
-                    <thead>
-                        <tr>
-                            <th onclick="sortTable(this)">代碼</th>
-                            <th onclick="sortTable(this)">名稱</th>
-                            <th class="text-right" onclick="sortTable(this)">權重 (%)</th>
-                        </tr>
-                    </thead>
-                    <tbody></tbody>
-                </table>
+                <div class="table-title">近期異動紀錄</div>
+                <div class="table-scroll" style="max-height: 350px;">
+                    <div id="p4-changes-timeline"></div>
                 </div>
             </div>
 
@@ -1428,6 +1469,9 @@
             document.getElementById('p1-kpi-mode').innerHTML = `<span class="mode-indicator ${modeClass}">${cashMode.mode || '-'}</span>`;
             document.getElementById('p1-kpi-mode-desc').textContent = cashMode.mode_desc || '-';
 
+            // Today Summary
+            renderP1TodaySummary();
+
             // Charts
             renderP1CashHistoryChart();
             renderP1ETFHoldingsChart();
@@ -1439,6 +1483,80 @@
 
             // Conviction Table
             renderP1ConvictionTable();
+        }
+
+        function renderP1TodaySummary() {
+            const changes = ((dashboardData.daily_changes || {})['00981A'] || []);
+            const latest = changes[changes.length - 1] || {};
+            const cashMode = dashboardData.cash_mode || {};
+            const reportDate = dashboardData.report_date || '';
+
+            const cards = [];
+
+            // 攻防模式
+            const cashNow = cashMode.cash_now || 0;
+            const modeColor = cashNow >= 5 ? 'var(--red)' : cashNow >= 3 ? 'var(--orange)' : cashNow <= 2 ? 'var(--accent)' : 'var(--green)';
+            cards.push({
+                icon: '📡', title: cashMode.mode || '-',
+                body: `現金 ${cashNow.toFixed(1)}% · ${cashMode.trend || ''}`,
+                color: modeColor
+            });
+
+            // 新增
+            if (latest.new && latest.new.length > 0) {
+                cards.push({
+                    icon: '✨', title: `新增 ${latest.new.length} 檔`,
+                    body: latest.new.map(s => `${s.name}(${s.code})`).join('、'),
+                    color: 'var(--green)'
+                });
+            }
+
+            // 加碼
+            if (latest.added && latest.added.length > 0) {
+                const topAdds = latest.added.slice(0, 3);
+                cards.push({
+                    icon: '📈', title: `加碼 ${latest.added.length} 檔`,
+                    body: topAdds.map(s => `${s.name} +${(s.weight_chg||0).toFixed(1)}%`).join('、'),
+                    color: 'var(--accent)'
+                });
+            }
+
+            // 減碼
+            if (latest.reduced && latest.reduced.length > 0) {
+                const topReds = latest.reduced.slice(0, 3);
+                cards.push({
+                    icon: '📉', title: `減碼 ${latest.reduced.length} 檔`,
+                    body: topReds.map(s => `${s.name} ${(s.weight_chg||0).toFixed(1)}%`).join('、'),
+                    color: 'var(--orange)'
+                });
+            }
+
+            // 出場
+            if (latest.exited && latest.exited.length > 0) {
+                cards.push({
+                    icon: '🚪', title: `退出 ${latest.exited.length} 檔`,
+                    body: latest.exited.map(s => `${s.name}(${s.code})`).join('、'),
+                    color: 'var(--red)'
+                });
+            }
+
+            // 無異動
+            if (!latest.new?.length && !latest.added?.length && !latest.reduced?.length && !latest.exited?.length) {
+                cards.push({ icon: '✅', title: '今日無重大異動', body: '經理人維持原有配置', color: 'var(--text-muted)' });
+            }
+
+            const container = document.getElementById('p1-summary-content');
+            const wrapper = document.getElementById('p1-today-summary');
+            document.getElementById('p1-summary-date').textContent = reportDate;
+
+            container.innerHTML = cards.map(c => `
+                <div class="insight-card" style="border-left-color: ${c.color};">
+                    <div class="insight-card-title">${c.icon} ${c.title}</div>
+                    <div class="insight-card-body">${c.body}</div>
+                </div>
+            `).join('');
+
+            wrapper.style.display = 'block';
         }
 
         let cashRangeDays = 90;
@@ -1473,11 +1591,48 @@
 
             const allData = dashboardData.cash_series;
             const sliced = cashRangeDays >= allData.length ? allData : allData.slice(-cashRangeDays);
+            const labels = sliced.map(d => d.date);
+
+            // Build signal event annotations
+            const dailyChanges = (dashboardData.daily_changes || {})['00981A'] || [];
+            const annotations = {};
+            dailyChanges.forEach(day => {
+                const idx = labels.indexOf(day.date);
+                if (idx === -1) return;
+                const hasNew = day.new && day.new.length > 0;
+                const hasExited = day.exited && day.exited.length > 0;
+                if (!hasNew && !hasExited) return;
+
+                const names = [
+                    ...((day.new || []).map(s => `+${s.name}`)),
+                    ...((day.exited || []).map(s => `-${s.name}`))
+                ].join(' ');
+                const color = hasNew && !hasExited ? 'rgba(0,196,140,0.6)' :
+                              hasExited && !hasNew ? 'rgba(255,71,87,0.6)' : 'rgba(168,85,247,0.6)';
+
+                annotations[`evt_${idx}`] = {
+                    type: 'line',
+                    xMin: idx, xMax: idx,
+                    borderColor: color,
+                    borderWidth: 1.5,
+                    borderDash: [3, 3],
+                    label: {
+                        display: true,
+                        content: names,
+                        position: 'start',
+                        backgroundColor: 'rgba(0,0,0,0.7)',
+                        color: '#fff',
+                        font: { size: 9 },
+                        padding: 3,
+                        borderRadius: 3
+                    }
+                };
+            });
 
             charts['p1-cash-history'] = new Chart(ctx, {
                 type: 'line',
                 data: {
-                    labels: sliced.map(d => d.date),
+                    labels: labels,
                     datasets: [
                         {
                             label: '現金比例 (%)',
@@ -1565,6 +1720,9 @@
                             limits: {
                                 x: { minRange: 5 }
                             }
+                        },
+                        annotation: {
+                            annotations: annotations
                         }
                     },
                     scales: {
@@ -2318,7 +2476,7 @@
 
             renderP4KPIs(etfData);
             renderP4Charts(etfData);
-            renderP4HoldingsTable(etfData);
+            renderP4ChangesTimeline(etfData);
             populateComparisonSelects(etfData);
         }
 
@@ -2474,30 +2632,52 @@
             });
         }
 
-        function renderP4HoldingsTable(etfData) {
-            const latest = etfData.date_records[etfData.date_records.length - 1] || {};
-            const tbody = document.querySelector('#p4-table-holdings tbody');
-            if (!tbody) return;
+        function renderP4ChangesTimeline(etfData) {
+            const container = document.getElementById('p4-changes-timeline');
+            if (!container) return;
 
-            if (!latest.holdings) {
-                tbody.innerHTML = '<tr><td colspan="3" style="text-align: center; color: var(--text-muted);">無數據</td></tr>';
+            const records = etfData.date_records || [];
+            if (records.length < 2) {
+                container.innerHTML = '<div style="padding:1rem; color:var(--text-muted);">資料不足</div>';
                 return;
             }
 
-            const maxW = Math.max(...latest.holdings.map(h => h.weight || 0), 1);
-            tbody.innerHTML = latest.holdings.map(holding => {
-                const w = holding.weight || 0;
-                const pct = Math.min(100, (w / maxW) * 100);
-                const barColor = w >= 5 ? 'var(--accent)' : w >= 2 ? 'var(--cyan)' : 'var(--text-muted)';
-                return `<tr>
-                    <td>${holding.code}</td>
-                    <td>${holding.name}</td>
-                    <td class="text-right"><div class="weight-bar">
-                        <span>${w.toFixed(2)}%</span>
-                        <div class="weight-bar-bg"><div class="weight-bar-fill" style="width:${pct}%; background:${barColor};"></div></div>
-                    </div></td>
-                </tr>`;
-            }).join('');
+            let html = '';
+            // Compare consecutive days, most recent first
+            for (let i = records.length - 1; i >= 1 && i >= records.length - 10; i--) {
+                const curr = records[i];
+                const prev = records[i - 1];
+                const currMap = Object.fromEntries((curr.holdings || []).map(h => [h.code, h]));
+                const prevMap = Object.fromEntries((prev.holdings || []).map(h => [h.code, h]));
+                const currCodes = new Set(Object.keys(currMap));
+                const prevCodes = new Set(Object.keys(prevMap));
+
+                const newStocks = [...currCodes].filter(c => !prevCodes.has(c));
+                const exitStocks = [...prevCodes].filter(c => !currCodes.has(c));
+                const bigAdds = [...currCodes].filter(c => prevCodes.has(c) && (currMap[c].weight - prevMap[c].weight) > 0.3);
+                const bigReds = [...currCodes].filter(c => prevCodes.has(c) && (currMap[c].weight - prevMap[c].weight) < -0.3);
+
+                if (!newStocks.length && !exitStocks.length && !bigAdds.length && !bigReds.length) continue;
+
+                const tags = [];
+                newStocks.forEach(c => tags.push(`<span class="badge badge-green">+${currMap[c]?.name || c}</span>`));
+                exitStocks.forEach(c => tags.push(`<span class="badge badge-red">-${prevMap[c]?.name || c}</span>`));
+                bigAdds.forEach(c => {
+                    const chg = (currMap[c].weight - prevMap[c].weight).toFixed(1);
+                    tags.push(`<span class="badge badge-blue">↑${currMap[c].name} +${chg}%</span>`);
+                });
+                bigReds.forEach(c => {
+                    const chg = (currMap[c].weight - prevMap[c].weight).toFixed(1);
+                    tags.push(`<span class="badge badge-orange">↓${currMap[c].name} ${chg}%</span>`);
+                });
+
+                html += `<div style="display:flex; gap:0.75rem; align-items:flex-start; padding:0.75rem 0; border-bottom:1px solid var(--border);">
+                    <div style="flex-shrink:0; font-size:0.8rem; color:var(--text-muted); width:80px;">${curr.date}</div>
+                    <div style="display:flex; flex-wrap:wrap; gap:0.4rem;">${tags.join('')}</div>
+                </div>`;
+            }
+
+            container.innerHTML = html || '<div style="padding:1rem; color:var(--text-muted);">近期無重大異動</div>';
         }
 
         function populateComparisonSelects(etfData) {
