@@ -801,7 +801,7 @@
             <!-- Charts Row 1 -->
             <div class="charts-row">
                 <div class="chart-container">
-                    <div class="chart-title">00981A 現金水位歷史走勢</div>
+                    <div class="chart-title">00981A 現金水位 vs 加權指數 vs 櫃買指數 (30日)</div>
                     <div class="chart-area-lg"><canvas id="p1-chart-cash-history"></canvas></div>
                 </div>
                 <div class="chart-container">
@@ -1448,51 +1448,101 @@
                     labels: last30.map(d => d.date),
                     datasets: [
                         {
-                            label: '現金比例',
-                            data: last30.map(d => d.cash_pct?.toFixed(1)),
+                            label: '現金比例 (%)',
+                            data: last30.map(d => d.cash_pct),
                             borderColor: '#4f8ef7',
-                            backgroundColor: 'rgba(79, 142, 247, 0.1)',
+                            backgroundColor: 'rgba(79, 142, 247, 0.08)',
+                            borderWidth: 2,
+                            tension: 0.3,
+                            pointRadius: 1,
+                            pointHoverRadius: 4,
+                            fill: true,
+                            yAxisID: 'y'
+                        },
+                        {
+                            label: '5MA',
+                            data: last30.map(d => d.cash_5ma),
+                            borderColor: 'rgba(255, 165, 2, 0.6)',
+                            borderWidth: 1,
+                            borderDash: [4, 4],
+                            pointRadius: 0,
+                            tension: 0.3,
+                            yAxisID: 'y'
+                        },
+                        {
+                            label: '加權指數',
+                            data: last30.map(d => d.taiex),
+                            borderColor: '#00c48c',
+                            backgroundColor: 'rgba(0, 196, 140, 0.05)',
                             borderWidth: 2,
                             tension: 0.3,
                             pointRadius: 0,
-                            fill: true
+                            fill: false,
+                            yAxisID: 'y1'
                         },
                         {
-                            label: '5日均線',
-                            data: last30.map(d => d.cash_5ma ? d.cash_5ma?.toFixed(1) : null),
-                            borderColor: '#ffa502',
-                            borderWidth: 1,
-                            borderDash: [5, 5],
+                            label: '櫃買指數',
+                            data: last30.map(d => d.tpex),
+                            borderColor: '#a855f7',
+                            borderWidth: 1.5,
+                            tension: 0.3,
                             pointRadius: 0,
-                            tension: 0.3
-                        },
-                        {
-                            label: '20日均線',
-                            data: last30.map(d => d.cash_20ma ? d.cash_20ma?.toFixed(1) : null),
-                            borderColor: '#ff4757',
-                            borderWidth: 1,
-                            borderDash: [5, 5],
-                            pointRadius: 0,
-                            tension: 0.3
+                            borderDash: [6, 3],
+                            fill: false,
+                            yAxisID: 'y2'
                         }
                     ]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
+                    interaction: {
+                        mode: 'index',
+                        intersect: false
+                    },
                     plugins: {
                         legend: {
-                            labels: { color: '#8b8fa3', font: { size: 11 } }
+                            labels: { color: '#8b8fa3', font: { size: 10 }, usePointStyle: true, pointStyle: 'line' }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(ctx) {
+                                    const v = ctx.parsed.y;
+                                    if (v == null) return null;
+                                    if (ctx.dataset.yAxisID === 'y') return `${ctx.dataset.label}: ${v.toFixed(2)}%`;
+                                    if (ctx.dataset.yAxisID === 'y1') return `加權: ${v.toFixed(0)}`;
+                                    return `櫃買: ${v.toFixed(1)}`;
+                                }
+                            }
                         }
                     },
                     scales: {
                         y: {
-                            ticks: { color: '#8b8fa3' },
+                            type: 'linear',
+                            position: 'left',
+                            title: { display: true, text: '現金 (%)', color: '#4f8ef7', font: { size: 10 } },
+                            ticks: { color: '#4f8ef7', callback: v => v + '%' },
                             grid: { color: 'rgba(42, 46, 61, 0.5)' }
                         },
+                        y1: {
+                            type: 'linear',
+                            position: 'right',
+                            title: { display: true, text: '加權指數', color: '#00c48c', font: { size: 10 } },
+                            ticks: { color: '#00c48c', callback: v => (v/1000).toFixed(0) + 'K' },
+                            grid: { drawOnChartArea: false }
+                        },
+                        y2: {
+                            type: 'linear',
+                            position: 'right',
+                            title: { display: true, text: '櫃買', color: '#a855f7', font: { size: 10 } },
+                            ticks: { color: '#a855f7' },
+                            grid: { drawOnChartArea: false },
+                            // Offset from y1
+                            afterFit(axis) { axis.width = 50; }
+                        },
                         x: {
-                            ticks: { color: '#8b8fa3' },
-                            grid: { color: 'rgba(42, 46, 61, 0.5)' }
+                            ticks: { color: '#8b8fa3', maxRotation: 45 },
+                            grid: { color: 'rgba(42, 46, 61, 0.3)' }
                         }
                     }
                 }

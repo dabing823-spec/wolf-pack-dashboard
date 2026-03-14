@@ -30,33 +30,76 @@ SCRIPT_DIR = Path(__file__).parent
 OUTPUT_DIR = SCRIPT_DIR.parent / "data"
 OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
-# TAIEX 歷史數據（手動維護，或日後改為自動抓取）
-TAIEX = {
-    "2025-10-17":22643.50,"2025-10-20":22773.97,"2025-10-21":22643.48,"2025-10-22":22643.48,
-    "2025-10-23":22822.48,"2025-10-27":22925.85,"2025-10-28":22767.61,"2025-10-29":22988.81,
-    "2025-10-30":23082.33,"2025-10-31":22822.48,"2025-11-03":22914.00,"2025-11-04":23224.90,
-    "2025-11-05":23291.65,"2025-11-06":23085.49,"2025-11-07":22921.73,"2025-11-10":23125.29,
-    "2025-11-11":23031.94,"2025-11-12":22758.54,"2025-11-13":22546.80,"2025-11-14":22417.00,
-    "2025-11-17":22702.24,"2025-11-18":22963.67,"2025-11-19":22721.89,"2025-11-20":22486.17,
-    "2025-11-21":22411.06,"2025-11-24":22487.42,"2025-11-25":22486.17,"2025-11-26":22758.54,
-    "2025-11-27":22901.18,"2025-11-28":22938.31,"2025-12-01":23212.46,"2025-12-02":23367.93,
-    "2025-12-03":23412.16,"2025-12-04":23460.97,"2025-12-05":23432.59,"2025-12-08":23525.97,
-    "2025-12-09":23611.72,"2025-12-10":23551.64,"2025-12-11":23613.43,"2025-12-12":23614.46,
-    "2025-12-15":23516.71,"2025-12-16":23429.81,"2025-12-17":23277.36,"2025-12-18":23048.87,
-    "2025-12-19":23053.95,"2025-12-22":23267.07,"2025-12-23":23358.70,"2025-12-24":23434.85,
-    "2025-12-26":23412.82,"2025-12-29":23336.18,"2025-12-30":23312.32,"2025-12-31":23375.52,
-    "2026-01-02":23557.69,"2026-01-05":23777.58,"2026-01-06":23792.65,"2026-01-07":23805.98,
-    "2026-01-08":23792.65,"2026-01-09":23643.69,"2026-01-12":23606.25,"2026-01-13":23549.88,
-    "2026-01-14":23587.02,"2026-01-15":23648.63,"2026-01-16":23694.83,"2026-01-19":23746.30,
-    "2026-01-20":23858.85,"2026-01-21":24034.83,"2026-01-22":24076.91,"2026-01-23":24076.91,
-    "2026-01-26":24034.83,"2026-01-27":24154.72,"2026-01-28":24321.91,"2026-01-29":24321.91,
-    "2026-01-30":24359.47,"2026-02-02":24459.47,"2026-02-03":29162.03,"2026-02-04":30000.00,
-    "2026-02-05":30471.45,"2026-02-06":31562.47,"2026-02-09":32375.30,"2026-02-10":33090.88,
-    "2026-02-11":33605.71,"2026-02-23":33773.26,"2026-02-24":34700.82,"2026-02-25":35413.07,
-    "2026-02-26":35414.49,"2026-03-02":35095.09,"2026-03-03":34323.65,"2026-03-04":32828.88,
-    "2026-03-05":33672.94,"2026-03-06":33599.54,"2026-03-09":32110.42,"2026-03-10":32771.87,
-    "2026-03-11":34114.19,"2026-03-12":33581.86,
-}
+def fetch_market_indices(start_year=2025, start_month=10):
+    """自動抓取加權指數 (TAIEX) 和櫃買指數 (TPEX) 歷史資料"""
+    import requests, re
+
+    taiex = {}
+    tpex = {}
+    now = datetime.now()
+
+    headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36'}
+
+    # 遍歷每個月
+    y, m = start_year, start_month
+    while True:
+        if y > now.year or (y == now.year and m > now.month):
+            break
+
+        # ── TAIEX (TWSE) ──
+        try:
+            url = f'https://www.twse.com.tw/exchangeReport/FMTQIK?response=json&date={y}{m:02d}01'
+            r = requests.get(url, headers=headers, timeout=10)
+            data = r.json()
+            if data.get('stat') == 'OK' and data.get('data'):
+                for row in data['data']:
+                    # row[0] = '115/03/13', row[4] = '33,400.32'
+                    parts = row[0].split('/')
+                    if len(parts) == 3:
+                        dt = f"{int(parts[0]) + 1911}-{parts[1]}-{parts[2]}"
+                        val = row[4].replace(',', '')
+                        try:
+                            taiex[dt] = float(val)
+                        except ValueError:
+                            pass
+        except Exception as e:
+            print(f"  ⚠️ TAIEX {y}/{m:02d} 抓取失敗: {e}")
+
+        # ── TPEX (櫃買) ──
+        try:
+            roc_y = y - 1911
+            url = f'https://www.tpex.org.tw/web/stock/aftertrading/daily_trading_index/st41_result.php?l=zh-tw&d={roc_y}/{m:02d}&o=json'
+            r = requests.get(url, headers=headers, timeout=10)
+            data = r.json()
+            tables = data.get('tables', [])
+            if tables:
+                rows = tables[0].get('data', [])
+                for row in rows:
+                    # row[0] = '115/03/13', row[4] = 312.9 (櫃買指數)
+                    parts = row[0].split('/')
+                    if len(parts) == 3:
+                        dt = f"{int(parts[0]) + 1911}-{parts[1]}-{parts[2]}"
+                        val = row[4]
+                        try:
+                            tpex[dt] = float(str(val).replace(',', ''))
+                        except ValueError:
+                            pass
+        except Exception as e:
+            print(f"  ⚠️ TPEX {y}/{m:02d} 抓取失敗: {e}")
+
+        # Next month
+        m += 1
+        if m > 12:
+            m = 1
+            y += 1
+
+    print(f"  📈 TAIEX: {len(taiex)} 天, TPEX: {len(tpex)} 天")
+    return taiex, tpex
+
+
+# 抓取市場指數（快取到變數）
+TAIEX = {}
+TPEX = {}
 
 
 def clean(obj):
@@ -578,6 +621,11 @@ def generate():
         else:
             print(f"   → No data found")
 
+    # Fetch market indices
+    global TAIEX, TPEX
+    print("\n📈 Fetching market indices (TAIEX + TPEX)...")
+    TAIEX, TPEX = fetch_market_indices(2025, 10)
+
     # ═══════════════════════════════════════
     # Generate dashboard.json
     # ═══════════════════════════════════════
@@ -610,7 +658,8 @@ def generate():
             c20 = None
 
         cs.append({'date': dt, 'cash_pct': round(cash_pct, 2), 'cash_5ma': c5, 'cash_20ma': c20,
-                    'stock_pct': round(stock_pct, 2), 'n_holdings': n_holdings})
+                    'stock_pct': round(stock_pct, 2), 'n_holdings': n_holdings,
+                    'taiex': TAIEX.get(dt), 'tpex': TPEX.get(dt)})
     v5['cash_series'] = cs
 
     # Latest holdings
@@ -731,7 +780,7 @@ def generate():
                 'stock_weight': round(stock_wt, 2),
                 'taiex': taiex
             })
-            cash_series_etf.append({'date': dt, 'cash_pct': round(cash_pct, 2), 'taiex': taiex})
+            cash_series_etf.append({'date': dt, 'cash_pct': round(cash_pct, 2), 'taiex': taiex, 'tpex': TPEX.get(dt)})
 
         etf_pages[etf_id] = {
             'dates': etf_dates, 'n_dates': len(etf_dates),
