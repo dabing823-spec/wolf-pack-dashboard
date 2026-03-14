@@ -1028,11 +1028,11 @@
                 <div class="table-title">對比分析工具</div>
                 <div class="comparison-controls">
                     <div>
-                        <label style="display: block; margin-bottom: 0.5rem; font-size: 0.85rem; color: var(--text-muted);">日期 1</label>
+                        <label style="display: block; margin-bottom: 0.5rem; font-size: 0.85rem; color: var(--text-muted);">基準日（較早）</label>
                         <select class="comparison-select" id="p4-compare-date1"></select>
                     </div>
                     <div>
-                        <label style="display: block; margin-bottom: 0.5rem; font-size: 0.85rem; color: var(--text-muted);">日期 2</label>
+                        <label style="display: block; margin-bottom: 0.5rem; font-size: 0.85rem; color: var(--text-muted);">對比日（較晚）</label>
                         <select class="comparison-select" id="p4-compare-date2"></select>
                     </div>
                     <div style="display: flex; align-items: flex-end;">
@@ -2034,7 +2034,7 @@
         }
 
         function populateComparisonSelects(etfData) {
-            const dates = etfData.date_records.map(d => d.date).reverse();
+            const dates = etfData.date_records.map(d => d.date).reverse(); // newest first
 
             const sel1 = document.getElementById('p4-compare-date1');
             const sel2 = document.getElementById('p4-compare-date2');
@@ -2042,8 +2042,10 @@
             sel1.innerHTML = dates.map(d => `<option value="${d}">${d}</option>`).join('');
             sel2.innerHTML = dates.map(d => `<option value="${d}">${d}</option>`).join('');
 
+            // 預設：日期1=前一天（舊），日期2=最新（新）
             if (dates.length > 1) {
-                sel2.value = dates[1];
+                sel1.value = dates[1]; // 較舊
+                sel2.value = dates[0]; // 較新
             }
         }
 
@@ -2051,58 +2053,76 @@
             if (!etfPagesData || !etfPagesData[currentETF]) return;
 
             const etfData = etfPagesData[currentETF];
-            const date1 = document.getElementById('p4-compare-date1').value;
-            const date2 = document.getElementById('p4-compare-date2').value;
+            let dateA = document.getElementById('p4-compare-date1').value;
+            let dateB = document.getElementById('p4-compare-date2').value;
 
-            const record1 = etfData.date_records.find(r => r.date === date1);
-            const record2 = etfData.date_records.find(r => r.date === date2);
+            if (dateA === dateB) {
+                alert('請選擇不同的日期');
+                return;
+            }
 
-            if (!record1 || !record2) {
+            // 確保 earlier < later，語義：earlier → later 的變化
+            const earlier = dateA < dateB ? dateA : dateB;
+            const later = dateA < dateB ? dateB : dateA;
+
+            const recordOld = etfData.date_records.find(r => r.date === earlier);
+            const recordNew = etfData.date_records.find(r => r.date === later);
+
+            if (!recordOld || !recordNew) {
                 alert('請選擇有效日期');
                 return;
             }
 
-            const holdings1 = record1.holdings || [];
-            const holdings2 = record2.holdings || [];
+            const holdingsOld = recordOld.holdings || [];
+            const holdingsNew = recordNew.holdings || [];
 
-            const codes1 = new Set(holdings1.map(h => h.code));
-            const codes2 = new Set(holdings2.map(h => h.code));
+            const codesOld = new Set(holdingsOld.map(h => h.code));
+            const codesNew = new Set(holdingsNew.map(h => h.code));
 
-            // New stocks
-            const newStocks = holdings2.filter(h => !codes1.has(h.code));
+            // 新增：later 有但 earlier 沒有
+            const newStocks = holdingsNew.filter(h => !codesOld.has(h.code));
             renderComparisonTable('p4-compare-new', newStocks);
 
-            // Exited stocks
-            const exitedStocks = holdings1.filter(h => !codes2.has(h.code));
+            // 退出：earlier 有但 later 沒有
+            const exitedStocks = holdingsOld.filter(h => !codesNew.has(h.code));
             renderComparisonTable('p4-compare-exited', exitedStocks);
 
-            // Changed stocks
-            const changedStocks = holdings1
-                .filter(h => codes2.has(h.code))
-                .map(h1 => {
-                    const h2 = holdings2.find(h => h.code === h1.code);
+            // 權重變化：兩邊都有的，算 later - earlier
+            const holdingsNewMap = Object.fromEntries(holdingsNew.map(h => [h.code, h]));
+            const changedStocks = holdingsOld
+                .filter(h => codesNew.has(h.code))
+                .map(hOld => {
+                    const hNew = holdingsNewMap[hOld.code];
                     return {
-                        code: h1.code,
-                        name: h1.name,
-                        weight1: h1.weight,
-                        weight2: h2.weight,
-                        delta: h2.weight - h1.weight
+                        code: hOld.code,
+                        name: hOld.name,
+                        weight1: hOld.weight,
+                        weight2: hNew.weight,
+                        delta: hNew.weight - hOld.weight
                     };
                 })
-                .filter(h => Math.abs(h.delta) > 0.0001);
+                .filter(h => Math.abs(h.delta) > 0.01)
+                .sort((a, b) => b.delta - a.delta);
 
             renderComparisonChangedTable(changedStocks);
 
-            // Cash delta
-            const cashDelta = record2.cash_pct - record1.cash_pct;
-            document.getElementById('p4-compare-cash-delta').textContent = `${cashDelta?.toFixed(2)}%`;
-            document.getElementById('p4-compare-cash-delta-arrow').innerHTML = cashDelta > 0 ? '📈 增加' : '📉 減少';
+            // 現金變化
+            const cashDelta = recordNew.cash_pct - recordOld.cash_pct;
+            document.getElementById('p4-compare-cash-delta').textContent = `${cashDelta > 0 ? '+' : ''}${cashDelta.toFixed(2)}%`;
+            document.getElementById('p4-compare-cash-delta-arrow').innerHTML =
+                cashDelta > 0.1 ? '<span class="delta-up">📈 現金增加（減倉）</span>' :
+                cashDelta < -0.1 ? '<span class="delta-down">📉 現金減少（加倉）</span>' :
+                '➡️ 持平';
 
-            // Holdings delta
-            const holdingsDelta = record2.n_stocks - record1.n_stocks;
+            // 持股數變化
+            const holdingsDelta = recordNew.n_stocks - recordOld.n_stocks;
             document.getElementById('p4-compare-holdings-delta').textContent = `${holdingsDelta > 0 ? '+' : ''}${holdingsDelta}`;
-            document.getElementById('p4-compare-holdings-delta-arrow').innerHTML = holdingsDelta > 0 ? '📈 增加' : '📉 減少';
+            document.getElementById('p4-compare-holdings-delta-arrow').innerHTML =
+                holdingsDelta > 0 ? '<span class="delta-up">📈 持股增加</span>' :
+                holdingsDelta < 0 ? '<span class="delta-down">📉 持股減少</span>' :
+                '➡️ 持平';
 
+            // 顯示比較區間標題
             document.getElementById('p4-comparison-result').classList.add('show');
         }
 
