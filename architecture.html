@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>JOY88 ETF Dashboard - Architecture</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #0a0e17;
+    color: #e2e8f0;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    padding: 2rem;
+    min-height: 100vh;
+  }
+  .container { max-width: 1100px; margin: 0 auto; }
+
+  h1 {
+    text-align: center;
+    font-size: 2rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+    background: linear-gradient(135deg, #4f8ef7, #00c48c);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .subtitle {
+    text-align: center;
+    color: #64748b;
+    font-size: 0.9rem;
+    margin-bottom: 2.5rem;
+  }
+
+  /* Section */
+  .section-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #4f8ef7;
+    margin: 2rem 0 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid rgba(79,142,247,0.2);
+  }
+
+  /* Flow diagram */
+  .flow {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    align-items: center;
+  }
+  .flow-row {
+    display: flex;
+    gap: 1.5rem;
+    justify-content: center;
+    flex-wrap: wrap;
+    width: 100%;
+  }
+  .flow-arrow {
+    display: flex;
+    justify-content: center;
+    padding: 0.5rem 0;
+    color: #475569;
+    font-size: 1.5rem;
+  }
+  .flow-arrow-label {
+    font-size: 0.7rem;
+    color: #64748b;
+    text-align: center;
+    margin-top: -0.25rem;
+    margin-bottom: 0.25rem;
+  }
+
+  /* Cards */
+  .card {
+    background: #141926;
+    border: 1px solid #1e293b;
+    border-radius: 12px;
+    padding: 1.25rem;
+    flex: 1;
+    min-width: 200px;
+    max-width: 320px;
+    transition: border-color 0.3s;
+  }
+  .card:hover { border-color: #4f8ef7; }
+  .card-icon { font-size: 1.5rem; margin-bottom: 0.5rem; }
+  .card-title {
+    font-size: 0.95rem;
+    font-weight: 600;
+    margin-bottom: 0.4rem;
+    color: #f1f5f9;
+  }
+  .card-desc {
+    font-size: 0.78rem;
+    color: #94a3b8;
+    line-height: 1.6;
+  }
+  .card-tag {
+    display: inline-block;
+    font-size: 0.65rem;
+    padding: 0.15rem 0.5rem;
+    border-radius: 4px;
+    margin-top: 0.5rem;
+    margin-right: 0.25rem;
+  }
+  .tag-python { background: rgba(53,114,165,0.2); color: #3572A5; }
+  .tag-js { background: rgba(241,224,90,0.15); color: #f1e05a; }
+  .tag-api { background: rgba(0,196,140,0.15); color: #00c48c; }
+  .tag-ci { background: rgba(79,142,247,0.15); color: #4f8ef7; }
+  .tag-data { background: rgba(255,165,0,0.15); color: #ffa500; }
+
+  /* Wide card */
+  .card-wide {
+    max-width: 100%;
+    width: 100%;
+  }
+
+  /* Pipeline steps */
+  .pipeline {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 0;
+    background: #141926;
+    border: 1px solid #1e293b;
+    border-radius: 12px;
+    overflow: hidden;
+    margin: 0.5rem 0;
+  }
+  .pipeline-step {
+    padding: 1rem;
+    border-right: 1px solid #1e293b;
+    text-align: center;
+  }
+  .pipeline-step:last-child { border-right: none; }
+  .pipeline-num {
+    font-size: 0.65rem;
+    color: #4f8ef7;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-bottom: 0.3rem;
+  }
+  .pipeline-name {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #f1f5f9;
+    margin-bottom: 0.25rem;
+  }
+  .pipeline-desc {
+    font-size: 0.68rem;
+    color: #64748b;
+    line-height: 1.4;
+  }
+
+  /* Stats grid */
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1rem;
+    margin: 1rem 0;
+  }
+  .stat {
+    background: #141926;
+    border: 1px solid #1e293b;
+    border-radius: 8px;
+    padding: 1rem;
+    text-align: center;
+  }
+  .stat-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #4f8ef7;
+  }
+  .stat-label {
+    font-size: 0.75rem;
+    color: #64748b;
+    margin-top: 0.25rem;
+  }
+
+  /* Pages grid */
+  .pages-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.75rem;
+    margin: 0.75rem 0;
+  }
+  .page-item {
+    background: #141926;
+    border: 1px solid #1e293b;
+    border-radius: 8px;
+    padding: 0.75rem 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+  .page-num {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #4f8ef7;
+    min-width: 28px;
+  }
+  .page-info { flex: 1; }
+  .page-name {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #f1f5f9;
+  }
+  .page-sub {
+    font-size: 0.68rem;
+    color: #64748b;
+  }
+
+  /* Macro indicators */
+  .macro-row {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 0.5rem;
+    margin: 0.75rem 0;
+  }
+  .macro-item {
+    background: #141926;
+    border: 1px solid #1e293b;
+    border-radius: 8px;
+    padding: 0.75rem;
+    text-align: center;
+  }
+  .macro-icon { font-size: 1.2rem; margin-bottom: 0.25rem; }
+  .macro-name { font-size: 0.75rem; font-weight: 600; color: #f1f5f9; }
+  .macro-what { font-size: 0.65rem; color: #4f8ef7; }
+
+  /* Responsive */
+  @media (max-width: 768px) {
+    .pipeline { grid-template-columns: 1fr; }
+    .pipeline-step { border-right: none; border-bottom: 1px solid #1e293b; }
+    .stats { grid-template-columns: repeat(2, 1fr); }
+    .pages-grid { grid-template-columns: 1fr; }
+    .macro-row { grid-template-columns: repeat(3, 1fr); }
+    .flow-row { flex-direction: column; align-items: center; }
+    .card { max-width: 100%; }
+  }
+
+  .footer {
+    text-align: center;
+    margin-top: 3rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid #1e293b;
+    color: #475569;
+    font-size: 0.75rem;
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <h1>JOY88 ETF Dashboard</h1>
+  <p class="subtitle">主動式台股 ETF 持股追蹤與策略分析系統</p>
+
+  <!-- Stats -->
+  <div class="stats">
+    <div class="stat">
+      <div class="stat-value">5</div>
+      <div class="stat-label">追蹤 ETF 檔數</div>
+    </div>
+    <div class="stat">
+      <div class="stat-value">9</div>
+      <div class="stat-label">分析頁面</div>
+    </div>
+    <div class="stat">
+      <div class="stat-value">8</div>
+      <div class="stat-label">策略模組</div>
+    </div>
+    <div class="stat">
+      <div class="stat-value">24/7</div>
+      <div class="stat-label">自動化部署</div>
+    </div>
+  </div>
+
+  <!-- Architecture Flow -->
+  <div class="section-title">System Architecture</div>
+
+  <div class="flow">
+
+    <!-- Layer 1: Data Source -->
+    <div class="flow-row">
+      <div class="card">
+        <div class="card-icon">📊</div>
+        <div class="card-title">ETF 持股 Excel</div>
+        <div class="card-desc">
+          5 檔主動式 ETF 每日持股明細<br>
+          00981A / 00980A / 00982A<br>
+          00991A / 00993A
+        </div>
+        <span class="card-tag tag-data">Google Drive</span>
+        <span class="card-tag tag-data">Daily Update</span>
+      </div>
+      <div class="card">
+        <div class="card-icon">🌐</div>
+        <div class="card-title">市場即時資料</div>
+        <div class="card-desc">
+          TWSE / TPEX 台股指數<br>
+          Yahoo Finance 全球指標<br>
+          CNN Fear & Greed Index
+        </div>
+        <span class="card-tag tag-api">REST API</span>
+      </div>
+      <div class="card">
+        <div class="card-icon">🔑</div>
+        <div class="card-title">Google Cloud</div>
+        <div class="card-desc">
+          Service Account 驗證<br>
+          Drive API 自動下載 Excel<br>
+          專案: joy88-etf
+        </div>
+        <span class="card-tag tag-ci">Service Account</span>
+      </div>
+    </div>
+
+    <div class="flow-arrow">&#9660;</div>
+    <div class="flow-arrow-label">Google Drive API 下載 + REST API 抓取</div>
+
+    <!-- Layer 2: Pipeline -->
+    <div class="flow-row" style="max-width:100%;">
+      <div class="card card-wide">
+        <div class="card-title" style="margin-bottom:0.75rem;">&#9881; Agent Pipeline (Python)</div>
+        <div class="pipeline">
+          <div class="pipeline-step">
+            <div class="pipeline-num">Step 1</div>
+            <div class="pipeline-name">Quality</div>
+            <div class="pipeline-desc">資料完整性<br>格式驗證</div>
+          </div>
+          <div class="pipeline-step">
+            <div class="pipeline-num">Step 2</div>
+            <div class="pipeline-name">Signal</div>
+            <div class="pipeline-desc">信號分析<br>日報生成</div>
+          </div>
+          <div class="pipeline-step">
+            <div class="pipeline-num">Step 3</div>
+            <div class="pipeline-name">Dashboard</div>
+            <div class="pipeline-desc">JSON 生成<br>指標計算</div>
+          </div>
+          <div class="pipeline-step">
+            <div class="pipeline-num">Step 4</div>
+            <div class="pipeline-name">Strategy</div>
+            <div class="pipeline-desc">8大策略模組<br>總經指標</div>
+          </div>
+          <div class="pipeline-step">
+            <div class="pipeline-num">Step 5</div>
+            <div class="pipeline-name">Alert</div>
+            <div class="pipeline-desc">LINE 通知<br>異動警報</div>
+          </div>
+        </div>
+        <span class="card-tag tag-python">Python</span>
+        <span class="card-tag tag-python">Pandas</span>
+        <span class="card-tag tag-ci">GitHub Actions</span>
+        <span class="card-tag tag-ci">Cron 18:30 TW</span>
+      </div>
+    </div>
+
+    <div class="flow-arrow">&#9660;</div>
+    <div class="flow-arrow-label">產出 JSON 資料檔 → Git commit & push</div>
+
+    <!-- Layer 3: Data Files -->
+    <div class="flow-row">
+      <div class="card">
+        <div class="card-icon">&#128451;</div>
+        <div class="card-title">dashboard.json</div>
+        <div class="card-desc">
+          現金模式 / 持股明細<br>
+          申購贖回 / 異動記錄<br>
+          共識標的 / 信心排行
+        </div>
+        <span class="card-tag tag-data">~150 KB</span>
+      </div>
+      <div class="card">
+        <div class="card-icon">&#128451;</div>
+        <div class="card-title">strategy.json</div>
+        <div class="card-desc">
+          信號回測 / 經理人風格<br>
+          操作建議 / 產業曝險<br>
+          Global Macro 五大指標
+        </div>
+        <span class="card-tag tag-data">~70 KB</span>
+      </div>
+      <div class="card">
+        <div class="card-icon">&#128451;</div>
+        <div class="card-title">etf_pages.json</div>
+        <div class="card-desc">
+          5 檔 ETF 個別持股歷史<br>
+          現金水位時間序列<br>
+          權重變化追蹤
+        </div>
+        <span class="card-tag tag-data">~460 KB</span>
+      </div>
+    </div>
+
+    <div class="flow-arrow">&#9660;</div>
+    <div class="flow-arrow-label">GitHub Pages 靜態部署</div>
+
+    <!-- Layer 4: Frontend -->
+    <div class="flow-row">
+      <div class="card card-wide">
+        <div class="card-icon">&#127760;</div>
+        <div class="card-title">Frontend (Single Page Application)</div>
+        <div class="card-desc" style="margin-bottom:0.75rem;">
+          純 HTML / CSS / JavaScript，無框架依賴。讀取 JSON 即時渲染 9 個分析頁面。<br>
+          Dark theme / Chart.js 圖表 / 響應式設計
+        </div>
+        <span class="card-tag tag-js">HTML/CSS/JS</span>
+        <span class="card-tag tag-js">Chart.js</span>
+        <span class="card-tag tag-ci">GitHub Pages</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Global Macro -->
+  <div class="section-title">Global Macro Dashboard</div>
+  <div class="macro-row">
+    <div class="macro-item">
+      <div class="macro-icon">&#128200;</div>
+      <div class="macro-name">VIX</div>
+      <div class="macro-what">看情緒</div>
+    </div>
+    <div class="macro-item">
+      <div class="macro-icon">&#128176;</div>
+      <div class="macro-name">DXY</div>
+      <div class="macro-what">看資金</div>
+    </div>
+    <div class="macro-item">
+      <div class="macro-icon">&#9981;&#65039;</div>
+      <div class="macro-name">OIL</div>
+      <div class="macro-what">看成本</div>
+    </div>
+    <div class="macro-item">
+      <div class="macro-icon">&#129351;</div>
+      <div class="macro-name">GOLD</div>
+      <div class="macro-what">看避險</div>
+    </div>
+    <div class="macro-item">
+      <div class="macro-icon">&#128200;</div>
+      <div class="macro-name">US 10Y</div>
+      <div class="macro-what">看利率</div>
+    </div>
+  </div>
+
+  <!-- 9 Pages -->
+  <div class="section-title">9 Analysis Pages</div>
+  <div class="pages-grid">
+    <div class="page-item">
+      <div class="page-num">P1</div>
+      <div class="page-info">
+        <div class="page-name">ETF 持股追蹤</div>
+        <div class="page-sub">00981A 持股 / 申贖 / 現金水位</div>
+      </div>
+    </div>
+    <div class="page-item">
+      <div class="page-num">P2</div>
+      <div class="page-info">
+        <div class="page-name">戰略儀表板</div>
+        <div class="page-sub">全球指標 / 共識分析 / 異動摘要</div>
+      </div>
+    </div>
+    <div class="page-item">
+      <div class="page-num">P3</div>
+      <div class="page-info">
+        <div class="page-name">跟單信號</div>
+        <div class="page-sub">信號表 / 圖表 / 跟單行動清單</div>
+      </div>
+    </div>
+    <div class="page-item">
+      <div class="page-num">P4</div>
+      <div class="page-info">
+        <div class="page-name">經理人風格</div>
+        <div class="page-sub">換手率 / 集中度 / 操作風格</div>
+      </div>
+    </div>
+    <div class="page-item">
+      <div class="page-num">P5</div>
+      <div class="page-info">
+        <div class="page-name">產業曝險</div>
+        <div class="page-sub">產業分布 / 權重變化</div>
+      </div>
+    </div>
+    <div class="page-item">
+      <div class="page-num">P6</div>
+      <div class="page-info">
+        <div class="page-name">信號回測</div>
+        <div class="page-sub">10d/20d/60d 勝率績效</div>
+      </div>
+    </div>
+    <div class="page-item">
+      <div class="page-num">P7</div>
+      <div class="page-info">
+        <div class="page-name">持倉重疊</div>
+        <div class="page-sub">5 ETF 交叉持股熱力圖</div>
+      </div>
+    </div>
+    <div class="page-item">
+      <div class="page-num">P8</div>
+      <div class="page-info">
+        <div class="page-name">擇時能力</div>
+        <div class="page-sub">現金調整 vs 後續指數表現</div>
+      </div>
+    </div>
+    <div class="page-item">
+      <div class="page-num">P9</div>
+      <div class="page-info">
+        <div class="page-name">AI 研究分析</div>
+        <div class="page-sub">NotebookLM 雙視角分析</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tech Stack -->
+  <div class="section-title">Tech Stack</div>
+  <div class="flow-row" style="justify-content:center; gap:1rem;">
+    <div class="card" style="min-width:160px;">
+      <div class="card-title">Frontend</div>
+      <div class="card-desc">
+        HTML / CSS / JavaScript<br>
+        Chart.js v4.5<br>
+        GitHub Pages
+      </div>
+    </div>
+    <div class="card" style="min-width:160px;">
+      <div class="card-title">Backend</div>
+      <div class="card-desc">
+        Python 3.12<br>
+        Pandas / NumPy<br>
+        Agent Pipeline
+      </div>
+    </div>
+    <div class="card" style="min-width:160px;">
+      <div class="card-title">CI/CD</div>
+      <div class="card-desc">
+        GitHub Actions<br>
+        Cron (weekdays 18:30)<br>
+        Auto deploy
+      </div>
+    </div>
+    <div class="card" style="min-width:160px;">
+      <div class="card-title">Data</div>
+      <div class="card-desc">
+        Google Drive API<br>
+        TWSE / Yahoo Finance<br>
+        CNN Fear & Greed
+      </div>
+    </div>
+  </div>
+
+  <div class="footer">
+    JOY88 ETF Dashboard &copy; 2025-2026 | Powered by GitHub Pages + GitHub Actions
+  </div>
+
+</div>
+</body>
+</html>
