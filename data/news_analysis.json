@@ -9,6 +9,8 @@
       "headline": "美重啟301條款調查台入列 台股重挫! 半導體.電子摔慘",
       "category": "地緣政治",
       "category_color": "red",
+      "source": "民視新聞",
+      "link": "https://news.google.com/rss/articles/CBMiVkFVX3lxTE1SSGJGMmgzaEUwQTNsZ3dUOWlLRE40Nk5TYzZJb1laaHR6WjhPa3FESjFyVUo3enRDY05JYUlJcFFRVkxTWENxNHVDUjRjZHg0UERBbw",
       "layer1": {
         "event": "美國重啟301條款貿易調查，台灣被列入調查名單",
         "data": "具體調查範圍與關稅威脅程度尚未公布",
@@ -44,6 +46,8 @@
       "headline": "VIX 升破25成美股「逆向指標」 法人：長線買點浮現",
       "category": "市場動態",
       "category_color": "blue",
+      "source": "鉅亨網",
+      "link": "https://news.cnyes.com/news/id/5912345",
       "layer1": {
         "event": "VIX指數升破25，達27.19",
         "data": "VIX 5日累積漲幅6.6%",
@@ -78,6 +82,8 @@
       "headline": "通膨暫歇！美國 2 月 CPI 年增 2.4% 符合預期",
       "category": "經濟數據",
       "category_color": "blue",
+      "source": "Yahoo 財經",
+      "link": "https://tw.stock.yahoo.com/news/cpi-2026-03",
       "layer1": {
         "event": "美國2月CPI年增2.4%符合預期",
         "data": "CPI年增率2.4%，通膨壓力暫時緩解",

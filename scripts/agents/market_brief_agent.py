@@ -434,12 +434,15 @@ def step4_analyze_news(
     news_entries = []
     for i, analysis in enumerate(parsed.get("news_analyses", [])):
         cat = analysis.get("category", "市場動態")
+        src = selected_news[i] if i < len(selected_news) else {}
         news_entries.append({
             "id": f"{today.replace('-', '')}_{i+1:03d}",
             "date": today,
-            "headline": analysis.get("headline", selected_news[i]["title"] if i < len(selected_news) else ""),
+            "headline": analysis.get("headline", src.get("title", "")),
             "category": cat,
             "category_color": category_colors.get(cat, "blue"),
+            "source": src.get("source", ""),
+            "link": src.get("link", ""),
             "layer1": analysis.get("layer1", {}),
             "layer2": analysis.get("layer2", {}),
             "layer3": analysis.get("layer3", {}),
