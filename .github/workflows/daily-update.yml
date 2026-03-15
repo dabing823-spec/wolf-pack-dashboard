@@ -53,6 +53,16 @@ jobs:
           cd scripts
           python strategy_engine.py
 
+      - name: Generate social card
+        run: |
+          pip install Pillow -q
+          cd scripts/agents
+          python -c "
+          from social_card_agent import run
+          result = run()
+          print(f'Social card: {result[\"status\"]} -> {result.get(\"output\", \"N/A\")}')
+          "
+
       - name: Validate output
         run: |
           echo "=== Checking output files ==="
