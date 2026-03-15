@@ -258,6 +258,10 @@
             .kpi-grid {
                 grid-template-columns: 1fr;
             }
+
+            #page-p2 .kpi-card[style*="grid-template-columns:repeat(4"] {
+                grid-template-columns: repeat(2, 1fr) !important;
+            }
         }
 
         /* Tables */
@@ -988,96 +992,97 @@
                 綜合 5 檔主動式 ETF 的市場指標與共識分析。上方為即時全球市場儀表板（台股指數 + 五大總經指標），下方為經理人持股共識與異動摘要。
             </div>
 
-            <!-- Market Indices -->
-            <div class="kpi-grid" style="margin-bottom: 1rem;">
-                <div class="kpi-card">
-                    <div class="kpi-label">加權指數</div>
-                    <div class="kpi-value" id="p2-idx-taiex">-</div>
+            <!-- Market Indices: Taiwan -->
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-bottom:1rem;">
+                <div class="kpi-card" style="padding:1.25rem 1.5rem; border-left:3px solid var(--accent);">
+                    <div class="kpi-label">加權指數 TAIEX</div>
+                    <div class="kpi-value" style="font-size:1.8rem;" id="p2-idx-taiex">-</div>
                     <div class="kpi-subtext" id="p2-idx-taiex-sub">-</div>
                 </div>
-                <div class="kpi-card">
-                    <div class="kpi-label">櫃買指數</div>
-                    <div class="kpi-value" id="p2-idx-tpex">-</div>
+                <div class="kpi-card" style="padding:1.25rem 1.5rem; border-left:3px solid var(--accent);">
+                    <div class="kpi-label">櫃買指數 TPEX</div>
+                    <div class="kpi-value" style="font-size:1.8rem;" id="p2-idx-tpex">-</div>
                     <div class="kpi-subtext" id="p2-idx-tpex-sub">-</div>
                 </div>
-                <div class="kpi-card">
-                    <div class="kpi-label">VIX 台灣</div>
+            </div>
+
+            <!-- Sentiment Row -->
+            <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:1rem; margin-bottom:1.25rem;">
+                <div class="kpi-card" style="text-align:center; padding:1rem;">
+                    <div class="kpi-label" style="font-size:0.75rem;">VIX 台灣</div>
                     <div class="kpi-value" id="p2-idx-vixtwn">-</div>
                     <div class="kpi-subtext" id="p2-idx-vixtwn-sub">-</div>
                 </div>
-                <div class="kpi-card">
-                    <div class="kpi-label">VIX S&P500</div>
+                <div class="kpi-card" style="text-align:center; padding:1rem;">
+                    <div class="kpi-label" style="font-size:0.75rem;">VIX S&P500</div>
                     <div class="kpi-value" id="p2-idx-vix">-</div>
                     <div class="kpi-subtext" id="p2-idx-vix-sub">-</div>
                 </div>
-                <div class="kpi-card">
-                    <div class="kpi-label">CNN 恐懼與貪婪</div>
+                <div class="kpi-card" style="text-align:center; padding:1rem;">
+                    <div class="kpi-label" style="font-size:0.75rem;">CNN 恐懼與貪婪</div>
                     <div class="kpi-value" id="p2-idx-feargreed">-</div>
                     <div class="kpi-subtext" id="p2-idx-feargreed-sub">-</div>
                 </div>
             </div>
 
-            <!-- Global Macro Indicators -->
-            <div style="margin-bottom: 0.5rem; font-size: 0.8rem; color: var(--text-secondary); padding-left: 0.25rem;">
-                Oil 看成本 | DXY 看資金 | VIX 看情緒 | Gold 看避險 | Yield 看利率
-            </div>
-            <div class="kpi-grid" style="margin-bottom: 1rem;">
-                <div class="kpi-card">
-                    <div class="kpi-label">DXY 美元指數 <span style="font-size:0.7rem;color:var(--text-secondary)">資金</span></div>
-                    <div class="kpi-value" id="p2-idx-dxy">-</div>
-                    <div class="kpi-subtext" id="p2-idx-dxy-sub">-</div>
+            <!-- Global Macro Panel -->
+            <div class="kpi-card" style="padding:0; margin-bottom:1.25rem; overflow:hidden;">
+                <div style="padding:0.75rem 1.25rem; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center;">
+                    <span style="font-size:0.9rem; font-weight:600; color:var(--text);">Global Macro Dashboard</span>
+                    <span style="font-size:0.7rem; color:var(--text-muted);">Oil 成本 | DXY 資金 | Gold 避險 | Yield 利率</span>
                 </div>
-                <div class="kpi-card">
-                    <div class="kpi-label">WTI 原油 <span style="font-size:0.7rem;color:var(--text-secondary)">成本</span></div>
-                    <div class="kpi-value" id="p2-idx-oil">-</div>
-                    <div class="kpi-subtext" id="p2-idx-oil-sub">-</div>
+                <div style="display:grid; grid-template-columns:repeat(4, 1fr); gap:0;">
+                    <div style="padding:1rem 1.25rem; border-right:1px solid var(--border);">
+                        <div style="font-size:0.7rem; color:var(--text-muted); margin-bottom:0.4rem; text-transform:uppercase; letter-spacing:0.05em;">DXY 美元指數</div>
+                        <div style="display:flex; align-items:baseline; gap:0.5rem;">
+                            <span style="font-size:1.4rem; font-weight:700;" id="p2-idx-dxy">-</span>
+                            <span style="font-size:0.8rem; font-weight:500;" id="p2-idx-dxy-sub">-</span>
+                        </div>
+                        <div style="font-size:0.65rem; color:var(--text-muted); margin-top:0.3rem;">看資金流向</div>
+                    </div>
+                    <div style="padding:1rem 1.25rem; border-right:1px solid var(--border);">
+                        <div style="font-size:0.7rem; color:var(--text-muted); margin-bottom:0.4rem; text-transform:uppercase; letter-spacing:0.05em;">WTI 原油</div>
+                        <div style="display:flex; align-items:baseline; gap:0.5rem;">
+                            <span style="font-size:1.4rem; font-weight:700;" id="p2-idx-oil">-</span>
+                            <span style="font-size:0.8rem; font-weight:500;" id="p2-idx-oil-sub">-</span>
+                        </div>
+                        <div style="font-size:0.65rem; color:var(--text-muted); margin-top:0.3rem;">看經濟成本</div>
+                    </div>
+                    <div style="padding:1rem 1.25rem; border-right:1px solid var(--border);">
+                        <div style="font-size:0.7rem; color:var(--text-muted); margin-bottom:0.4rem; text-transform:uppercase; letter-spacing:0.05em;">黃金 GOLD</div>
+                        <div style="display:flex; align-items:baseline; gap:0.5rem;">
+                            <span style="font-size:1.4rem; font-weight:700;" id="p2-idx-gold">-</span>
+                            <span style="font-size:0.8rem; font-weight:500;" id="p2-idx-gold-sub">-</span>
+                        </div>
+                        <div style="font-size:0.65rem; color:var(--text-muted); margin-top:0.3rem;">看避險需求</div>
+                    </div>
+                    <div style="padding:1rem 1.25rem;">
+                        <div style="font-size:0.7rem; color:var(--text-muted); margin-bottom:0.4rem; text-transform:uppercase; letter-spacing:0.05em;">US 10Y 殖利率</div>
+                        <div style="display:flex; align-items:baseline; gap:0.5rem;">
+                            <span style="font-size:1.4rem; font-weight:700;" id="p2-idx-us10y">-</span>
+                            <span style="font-size:0.8rem; font-weight:500;" id="p2-idx-us10y-sub">-</span>
+                        </div>
+                        <div style="font-size:0.65rem; color:var(--text-muted); margin-top:0.3rem;">看利率環境</div>
+                    </div>
                 </div>
-                <div class="kpi-card">
-                    <div class="kpi-label">黃金 <span style="font-size:0.7rem;color:var(--text-secondary)">避險</span></div>
-                    <div class="kpi-value" id="p2-idx-gold">-</div>
-                    <div class="kpi-subtext" id="p2-idx-gold-sub">-</div>
-                </div>
-                <div class="kpi-card">
-                    <div class="kpi-label">US 10Y 殖利率 <span style="font-size:0.7rem;color:var(--text-secondary)">利率</span></div>
-                    <div class="kpi-value" id="p2-idx-us10y">-</div>
-                    <div class="kpi-subtext" id="p2-idx-us10y-sub">-</div>
-                </div>
+                <!-- Macro Sync Signal -->
+                <div id="p2-macro-signal" style="padding:0.6rem 1.25rem; border-top:1px solid var(--border); font-size:0.8rem; color:var(--text-secondary); display:none;"></div>
             </div>
 
             <!-- Macro Reading Guide -->
-            <details style="margin-bottom: 1rem; background: rgba(79,142,247,0.04); border-radius: 8px; padding: 0;">
-                <summary style="cursor:pointer; padding: 0.6rem 1rem; font-size: 0.85rem; color: var(--text-secondary);">
-                    五大指標閱讀說明 (點擊展開)
+            <details style="margin-bottom:1.25rem; background:rgba(79,142,247,0.04); border-radius:8px;">
+                <summary style="cursor:pointer; padding:0.6rem 1rem; font-size:0.8rem; color:var(--text-muted); list-style:none;">
+                    &#9432; 五大指標怎麼看？(點擊展開)
                 </summary>
-                <div style="padding: 0.5rem 1rem 0.75rem; font-size: 0.8rem; color: var(--text-secondary); line-height: 1.8;">
-                    <table style="width:100%; border-collapse:collapse; font-size:0.8rem;">
-                        <tr style="border-bottom:1px solid rgba(255,255,255,0.06);">
-                            <td style="padding:6px 4px; color:var(--text); font-weight:600; width:80px;">VIX</td>
-                            <td style="padding:6px 4px; width:60px;">看情緒</td>
-                            <td style="padding:6px 4px;">&lt;15 低波動 (多頭穩定) | 15-20 正常 | 20-30 偏高 (風險升溫) | &gt;30 恐慌 (可能接近轉折)</td>
-                        </tr>
-                        <tr style="border-bottom:1px solid rgba(255,255,255,0.06);">
-                            <td style="padding:6px 4px; color:var(--text); font-weight:600;">DXY</td>
-                            <td style="padding:6px 4px;">看資金</td>
-                            <td style="padding:6px 4px;">美元走強 → 全球流動性收縮、新興市場承壓、原物料被壓制；走弱 → 資金外流尋找機會、股市/商品容易有行情</td>
-                        </tr>
-                        <tr style="border-bottom:1px solid rgba(255,255,255,0.06);">
-                            <td style="padding:6px 4px; color:var(--text); font-weight:600;">Oil</td>
-                            <td style="padding:6px 4px;">看成本</td>
-                            <td style="padding:6px 4px;">需求推升 → 經濟擴張利多；供給衝擊推升 → 通膨壓力利空；崩跌 → 市場擔憂衰退</td>
-                        </tr>
-                        <tr style="border-bottom:1px solid rgba(255,255,255,0.06);">
-                            <td style="padding:6px 4px; color:var(--text); font-weight:600;">Gold</td>
-                            <td style="padding:6px 4px;">看避險</td>
-                            <td style="padding:6px 4px;">股跌金漲 → 避險資金移動；股金齊漲 → 通膨預期或貨幣信用疑慮</td>
-                        </tr>
-                        <tr>
-                            <td style="padding:6px 4px; color:var(--text); font-weight:600;">US 10Y</td>
-                            <td style="padding:6px 4px;">看利率</td>
-                            <td style="padding:6px 4px;">殖利率升 → 經濟轉強或通膨擔憂 (升太快壓制股市)；殖利率降 → 經濟降溫、降息預期 (利多股市)</td>
-                        </tr>
-                    </table>
-                    <div style="margin-top:8px; padding-top:6px; border-top:1px solid rgba(255,255,255,0.06); font-style:italic;">
+                <div style="padding:0.25rem 1rem 0.75rem; font-size:0.78rem; color:var(--text-secondary); line-height:1.9;">
+                    <div style="display:grid; grid-template-columns:70px 50px 1fr; gap:2px 8px;">
+                        <span style="color:var(--text); font-weight:600;">VIX</span><span>情緒</span><span>&lt;15 低波動 | 15-20 正常 | 20-30 偏高 | &gt;30 恐慌 (可能接近轉折)</span>
+                        <span style="color:var(--text); font-weight:600;">DXY</span><span>資金</span><span>走強 → 流動性收縮、新興市場承壓；走弱 → 資金外流、股市/商品有行情</span>
+                        <span style="color:var(--text); font-weight:600;">Oil</span><span>成本</span><span>需求推升 → 經濟擴張利多；供給推升 → 通膨壓力；崩跌 → 衰退擔憂</span>
+                        <span style="color:var(--text); font-weight:600;">Gold</span><span>避險</span><span>股跌金漲 → 避險移動；股金齊漲 → 通膨預期或貨幣信用疑慮</span>
+                        <span style="color:var(--text); font-weight:600;">US 10Y</span><span>利率</span><span>殖利率升 → 經濟轉強或通膨 (升太快壓股市)；降 → 降溫、降息預期利多</span>
+                    </div>
+                    <div style="margin-top:8px; padding-top:6px; border-top:1px solid rgba(255,255,255,0.06); font-style:italic; font-size:0.75rem;">
                         當五大指標方向同步移動時，市場趨勢通常更加明確。
                     </div>
                 </div>
@@ -2620,6 +2625,7 @@
                     { key: 'gold',  id: 'p2-idx-gold',  format: v => v.toFixed(1) },
                     { key: 'us10y', id: 'p2-idx-us10y', format: v => v.toFixed(3) },
                 ];
+                let macroUp = 0, macroDown = 0;
                 for (const item of macroItems) {
                     const val = mi[item.key];
                     if (val != null) {
@@ -2634,7 +2640,22 @@
                             el.style.color = color;
                             subEl.textContent = `${chg >= 0 ? '+' : ''}${chg.toFixed(2)} (${chgPct >= 0 ? '+' : ''}${chgPct.toFixed(2)}%)`;
                             subEl.style.color = color;
+                            if (chg > 0) macroUp++;
+                            else if (chg < 0) macroDown++;
                         }
+                    }
+                }
+
+                // Macro sync signal
+                const sigEl = document.getElementById('p2-macro-signal');
+                if (sigEl && (macroUp + macroDown) >= 3) {
+                    const total = macroUp + macroDown;
+                    if (macroUp >= 3) {
+                        sigEl.style.display = 'block';
+                        sigEl.innerHTML = `<span style="color:var(--red);">&#9650;</span> ${macroUp}/${total} 指標同步上漲 — 留意通膨壓力與資金成本上升`;
+                    } else if (macroDown >= 3) {
+                        sigEl.style.display = 'block';
+                        sigEl.innerHTML = `<span style="color:var(--green);">&#9660;</span> ${macroDown}/${total} 指標同步下跌 — 留意經濟降溫與避險需求減弱`;
                     }
                 }
             }
