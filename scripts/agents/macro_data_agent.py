@@ -75,7 +75,11 @@ def fetch_indices_history():
     history = {}
     if INDICES_HISTORY_PATH.exists():
         try:
-            history = _load_json(INDICES_HISTORY_PATH)
+            loaded = _load_json(INDICES_HISTORY_PATH)
+            if isinstance(loaded, dict):
+                history = loaded
+            else:
+                log("  WARNING: indices_history.json has wrong format, regenerating")
         except Exception:
             pass
 
