@@ -2,8 +2,8 @@ name: Daily ETF Update
 
 on:
   schedule:
-    # 台灣時間 16:30 (UTC 08:30) — 收盤後執行
-    - cron: '30 8 * * 1-5'
+    # 台灣時間 18:30 (UTC 10:30) — Excel 上傳完成後執行
+    - cron: '30 10 * * 1-5'
   workflow_dispatch:
     inputs:
       days:
@@ -30,7 +30,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pip install pandas openpyxl requests numpy \
+          pip install pandas openpyxl requests numpy beautifulsoup4 lxml \
             google-auth google-auth-httplib2 google-api-python-client
 
       - name: Download ETF Excel from Google Drive
