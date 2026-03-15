@@ -4,23 +4,18 @@ export interface DateRecord {
     code: string
     name: string
     weight: number
-    weight_chg: number
   }>
   cash_pct: number
-  n_holdings: number
-  changes: {
-    new: Array<{ code: string; name: string; weight: number }>
-    removed: Array<{ code: string; name: string; prev_weight: number }>
-    added: Array<{ code: string; name: string; weight: number; weight_chg: number }>
-    reduced: Array<{ code: string; name: string; weight: number; weight_chg: number }>
-  }
+  n_stocks: number
+  stock_weight: number
+  taiex: number
 }
 
 export interface EtfPageData {
   dates: string[]
   n_dates: number
-  date_records: Record<string, DateRecord>
-  cash_series: Array<{ date: string; cash_pct: number; n_holdings: number }>
+  date_records: DateRecord[]
+  cash_series: Array<{ date: string; cash_pct: number; n_holdings?: number; n_stocks?: number }>
 }
 
 export type EtfPagesData = Record<string, EtfPageData>

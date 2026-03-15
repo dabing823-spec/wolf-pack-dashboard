@@ -1,8 +1,6 @@
 import { useState } from 'react'
-import { Line } from 'react-chartjs-2'
 import { useData } from '../contexts/DataContext'
 import { IntroBox, TableContainer } from '../components/shared'
-import { chartColors, defaultScaleOptions, defaultPluginOptions } from '../lib/chartDefaults'
 import '../lib/chartDefaults'
 import type { RiskSignal } from '../types'
 
@@ -34,9 +32,7 @@ function ScoreRing({ score, maxScore, level }: { score: number; maxScore: number
 }
 
 function SignalCard({ signal, onClick }: { signal: RiskSignal; onClick: () => void }) {
-  const color = RISK_COLORS[signal.level] || RISK_COLORS.green
-  const history = signal.history || []
-  const sparkData = history.slice(-20).map(h => h.value)
+  const color = RISK_COLORS[signal.signal] || RISK_COLORS.green
 
   return (
     <button onClick={onClick} className="w-full text-left bg-card border border-border rounded-xl p-4 hover:bg-card-hover transition-colors">
@@ -45,40 +41,23 @@ function SignalCard({ signal, onClick }: { signal: RiskSignal; onClick: () => vo
         <span className="w-3 h-3 rounded-full shrink-0" style={{ backgroundColor: color }} />
       </div>
       <div className="text-2xl font-bold mb-1" style={{ color }}>{signal.value?.toFixed(2) ?? '-'}</div>
-      <div className="text-xs text-text-muted mb-2">{signal.description}</div>
-      {/* Mini sparkline */}
-      {sparkData.length > 2 && (
-        <svg viewBox={`0 0 ${sparkData.length * 6} 24`} className="w-full h-6" preserveAspectRatio="none">
-          <polyline
-            points={sparkData.map((v, i) => {
-              const min = Math.min(...sparkData)
-              const max = Math.max(...sparkData)
-              const range = max - min || 1
-              const y = 22 - ((v - min) / range) * 20
-              return `${i * 6},${y}`
-            }).join(' ')}
-            fill="none" stroke={color} strokeWidth="1.5"
-          />
-        </svg>
-      )}
+      <div className="text-xs text-text-muted mb-2">{signal.desc || '-'}</div>
+      {/* Phase & slope info */}
+      <div className="flex items-center gap-2 text-xs text-text-muted">
+        {signal.phase_label && <span className="bg-border/50 px-1.5 py-0.5 rounded">{signal.phase_label}</span>}
+        {signal.slope_20d != null && (
+          <span className={signal.slope_20d > 0 ? 'text-up' : signal.slope_20d < 0 ? 'text-down' : ''}>
+            slope: {signal.slope_20d > 0 ? '+' : ''}{signal.slope_20d.toFixed(4)}
+          </span>
+        )}
+      </div>
     </button>
   )
 }
 
 function SignalDetailModal({ signal, onClose }: { signal: RiskSignal; onClose: () => void }) {
-  const history = signal.history || []
-  const color = RISK_COLORS[signal.level] || RISK_COLORS.green
-
-  const chartData = history.length > 0 ? {
-    labels: history.map(h => h.date),
-    datasets: [{
-      label: signal.name,
-      data: history.map(h => h.value),
-      borderColor: color,
-      backgroundColor: `${color}20`,
-      borderWidth: 2, tension: 0.3, pointRadius: 0, fill: true,
-    }],
-  } : null
+  const color = RISK_COLORS[signal.signal] || RISK_COLORS.green
+  const signalLabel = signal.signal === 'red' ? '紅燈' : signal.signal === 'yellow' ? '黃燈' : '綠燈'
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60" onClick={(e) => e.target === e.currentTarget && onClose()}>
@@ -88,57 +67,56 @@ function SignalDetailModal({ signal, onClose }: { signal: RiskSignal; onClose: (
           <button onClick={onClose} className="text-2xl text-text-muted hover:text-text-primary">&times;</button>
         </div>
 
-        <div className="grid grid-cols-3 gap-3 mb-4">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
           <div className="bg-bg rounded-lg p-3 text-center">
             <div className="text-xs text-text-muted mb-1">當前值</div>
             <div className="text-xl font-bold" style={{ color }}>{signal.value?.toFixed(4) ?? '-'}</div>
           </div>
           <div className="bg-bg rounded-lg p-3 text-center">
             <div className="text-xs text-text-muted mb-1">燈號</div>
-            <div className="text-xl font-bold" style={{ color }}>{signal.level === 'red' ? '紅燈' : signal.level === 'yellow' ? '黃燈' : '綠燈'}</div>
+            <div className="text-xl font-bold" style={{ color }}>{signalLabel}</div>
           </div>
           <div className="bg-bg rounded-lg p-3 text-center">
-            <div className="text-xs text-text-muted mb-1">分數</div>
-            <div className="text-xl font-bold" style={{ color }}>{signal.score}/{signal.max_score}</div>
+            <div className="text-xs text-text-muted mb-1">20日斜率</div>
+            <div className="text-xl font-bold" style={{ color }}>
+              {signal.slope_20d != null ? (signal.slope_20d > 0 ? '+' : '') + signal.slope_20d.toFixed(4) : '-'}
+            </div>
+          </div>
+          <div className="bg-bg rounded-lg p-3 text-center">
+            <div className="text-xs text-text-muted mb-1">加速度</div>
+            <div className="text-xl font-bold" style={{ color }}>
+              {signal.accel != null ? signal.accel.toFixed(4) : '-'}
+            </div>
           </div>
         </div>
 
-        <div className="text-sm text-text-muted mb-4">{signal.description}</div>
-
-        {chartData && (
-          <div className="h-48 mb-4">
-            <Line data={chartData} options={{
-              responsive: true, maintainAspectRatio: false,
-              plugins: defaultPluginOptions,
-              scales: { y: defaultScaleOptions, x: defaultScaleOptions },
-            }} />
+        {/* Description & Theory */}
+        <div className="text-sm text-text-muted mb-3">{signal.desc || '-'}</div>
+        {signal.theory && (
+          <div className="text-sm text-text-muted mb-4 p-3 bg-accent/5 rounded-lg">
+            <span className="font-semibold text-text-primary">理論依據：</span>{signal.theory}
           </div>
         )}
 
-        {history.length > 0 && (
-          <div className="max-h-40 overflow-y-auto">
-            <table className="w-full text-xs border-collapse">
-              <thead>
-                <tr className="border-b border-border">
-                  <th className="py-1 px-2 text-left text-text-muted">日期</th>
-                  <th className="py-1 px-2 text-right text-text-muted">數值</th>
-                  <th className="py-1 px-2 text-center text-text-muted">燈號</th>
-                </tr>
-              </thead>
-              <tbody>
-                {[...history].reverse().slice(0, 20).map((h, i) => (
-                  <tr key={i} className="border-b border-border/30">
-                    <td className="py-1 px-2">{h.date}</td>
-                    <td className="py-1 px-2 text-right font-mono">{h.value?.toFixed(4)}</td>
-                    <td className="py-1 px-2 text-center">
-                      <span className="w-2 h-2 rounded-full inline-block" style={{ backgroundColor: RISK_COLORS[h.level] || '#666' }} />
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+        {/* Extra info grid */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-4">
+          {signal.phase_label && (
+            <div className="bg-bg rounded-lg p-3">
+              <div className="text-xs text-text-muted mb-1">階段</div>
+              <div className="text-sm font-semibold text-text-primary">{signal.phase_label}</div>
+            </div>
+          )}
+          {signal.extremity_pct != null && (
+            <div className="bg-bg rounded-lg p-3">
+              <div className="text-xs text-text-muted mb-1">極端度</div>
+              <div className="text-sm font-semibold text-text-primary">{(signal.extremity_pct * 100).toFixed(1)}%</div>
+            </div>
+          )}
+          <div className="bg-bg rounded-lg p-3">
+            <div className="text-xs text-text-muted mb-1">可靠性</div>
+            <div className="text-sm font-semibold text-text-primary">{signal.reliable ? '可靠' : '不確定'}</div>
           </div>
-        )}
+        </div>
       </div>
     </div>
   )
@@ -153,7 +131,8 @@ export function P8RiskSignals() {
   const signals = riskSignals?.signals || []
 
   // Find macro analysis from news
-  const macroAnalysis = newsAnalysis?.news_analyses?.find(n => n.category === '宏觀風險' || n.category === '市場動態')
+  const _macroAnalysis = newsAnalysis?.news_analyses?.find(n => n.category === '宏觀風險' || n.category === '市場動態')
+  void _macroAnalysis // keep for future use
 
   if (!riskSignals) {
     return (
@@ -211,7 +190,7 @@ export function P8RiskSignals() {
       {/* Signal Cards Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
         {signals.map(signal => (
-          <SignalCard key={signal.id} signal={signal} onClick={() => setSelectedSignal(signal)} />
+          <SignalCard key={signal.key} signal={signal} onClick={() => setSelectedSignal(signal)} />
         ))}
       </div>
 

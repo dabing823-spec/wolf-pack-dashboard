@@ -24,19 +24,19 @@ export function P5StrategyAnalysis() {
     { key: 'code', label: '代碼' },
     { key: 'name', label: '名稱' },
     {
-      key: 'weight', label: '權重',
-      render: (r: Recommendation) => r.weight != null ? `${r.weight.toFixed(2)}%` : '-',
+      key: 'current_weight', label: '權重',
+      render: (r: Recommendation) => r.current_weight != null ? `${r.current_weight.toFixed(2)}%` : '-',
     },
     {
-      key: 'confidence', label: '評分',
-      render: (r: Recommendation) => <span className="font-bold text-accent">{r.confidence}</span>,
-      sortValue: (r: Recommendation) => r.confidence,
+      key: 'score', label: '評分',
+      render: (r: Recommendation) => <span className="font-bold text-accent">{r.score ?? '-'}</span>,
+      sortValue: (r: Recommendation) => r.score ?? 0,
     },
     {
-      key: 'action', label: '建議',
+      key: 'recommendation', label: '建議',
       render: (r: Recommendation) => {
-        const b = actionBadge(r.confidence)
-        return <span className={`px-2 py-0.5 rounded text-xs font-bold ${b.color}`}>{b.text}</span>
+        const b = actionBadge(r.score ?? 0)
+        return <span className={`px-2 py-0.5 rounded text-xs font-bold ${b.color}`}>{r.recommendation || b.text}</span>
       },
     },
   ]
@@ -48,10 +48,10 @@ export function P5StrategyAnalysis() {
     return {
       labels: types,
       datasets: [{
-        label: '勝率 (%)',
-        data: types.map(t => backtest.by_type[t].win_rate),
+        label: '10日勝率 (%)',
+        data: types.map(t => backtest.by_type[t]?.win_rate_10d ?? 0),
         backgroundColor: types.map(t => {
-          const wr = backtest.by_type[t].win_rate
+          const wr = backtest.by_type[t]?.win_rate_10d ?? 0
           return wr >= 65 ? chartColors.green : wr >= 55 ? chartColors.accent : chartColors.textMuted
         }),
         borderRadius: 4,
@@ -69,17 +69,21 @@ export function P5StrategyAnalysis() {
       render: (s: { type: string }) => <Badge variant={s.type === '新增' ? 'red' : 'blue'}>{s.type}</Badge>,
     },
     {
-      key: 'return_5d', label: '10日報酬', align: 'right' as const,
-      render: (s: { return_5d: number }) => {
-        const color = s.return_5d > 0 ? 'text-up' : s.return_5d < 0 ? 'text-down' : ''
-        return <span className={color}>{s.return_5d > 0 ? '+' : ''}{s.return_5d?.toFixed(2)}%</span>
+      key: 'return_10d', label: '10日報酬', align: 'right' as const,
+      render: (s: { return_10d?: number }) => {
+        const v = s.return_10d
+        if (v == null) return '-'
+        const color = v > 0 ? 'text-up' : v < 0 ? 'text-down' : ''
+        return <span className={color}>{v > 0 ? '+' : ''}{v.toFixed(2)}%</span>
       },
     },
     {
-      key: 'return_10d', label: '20日報酬', align: 'right' as const,
-      render: (s: { return_10d: number }) => {
-        const color = s.return_10d > 0 ? 'text-up' : s.return_10d < 0 ? 'text-down' : ''
-        return <span className={color}>{s.return_10d > 0 ? '+' : ''}{s.return_10d?.toFixed(2)}%</span>
+      key: 'return_20d', label: '20日報酬', align: 'right' as const,
+      render: (s: { return_20d?: number }) => {
+        const v = s.return_20d
+        if (v == null) return '-'
+        const color = v > 0 ? 'text-up' : v < 0 ? 'text-down' : ''
+        return <span className={color}>{v > 0 ? '+' : ''}{v.toFixed(2)}%</span>
       },
     },
   ]
@@ -125,10 +129,10 @@ export function P5StrategyAnalysis() {
           </details>
 
           <KpiGrid>
-            <KpiCard label="總信號數" value={backtest.summary.total_signals} />
-            <KpiCard label="整體勝率" value={`${backtest.summary.win_rate?.toFixed(1)}%`} valueColor={backtest.summary.win_rate >= 55 ? 'text-down' : 'text-text-muted'} />
-            <KpiCard label="10日平均報酬" value={`${backtest.summary.avg_return_5d >= 0 ? '+' : ''}${backtest.summary.avg_return_5d?.toFixed(2)}%`} valueColor={backtest.summary.avg_return_5d > 0 ? 'text-up' : 'text-down'} />
-            <KpiCard label="20日平均報酬" value={`${backtest.summary.avg_return_10d >= 0 ? '+' : ''}${backtest.summary.avg_return_10d?.toFixed(2)}%`} valueColor={backtest.summary.avg_return_10d > 0 ? 'text-up' : 'text-down'} />
+            <KpiCard label="總信號數" value={backtest.summary?.total_signals ?? '-'} />
+            <KpiCard label="10日勝率" value={backtest.summary?.win_rate_10d != null ? `${backtest.summary.win_rate_10d.toFixed(1)}%` : '-'} valueColor={(backtest.summary?.win_rate_10d ?? 0) >= 55 ? 'text-down' : 'text-text-muted'} />
+            <KpiCard label="10日平均報酬" value={backtest.summary?.avg_return_10d != null ? `${backtest.summary.avg_return_10d >= 0 ? '+' : ''}${backtest.summary.avg_return_10d.toFixed(2)}%` : '-'} valueColor={(backtest.summary?.avg_return_10d ?? 0) > 0 ? 'text-up' : 'text-down'} />
+            <KpiCard label="20日平均報酬" value={backtest.summary?.avg_return_20d != null ? `${backtest.summary.avg_return_20d >= 0 ? '+' : ''}${backtest.summary.avg_return_20d.toFixed(2)}%` : '-'} valueColor={(backtest.summary?.avg_return_20d ?? 0) > 0 ? 'text-up' : 'text-down'} />
           </KpiGrid>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

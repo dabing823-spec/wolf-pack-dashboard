@@ -38,11 +38,10 @@ export interface TimingScore {
 export interface Recommendation {
   code: string
   name: string
-  action: string
-  reason: string
-  confidence: number
-  etf_source: string
-  weight?: number
+  score: number
+  factors?: { consensus: number; conviction: number; velocity: number; cash_mode: number }
+  recommendation: string
+  current_weight?: number
 }
 
 export interface IndustryExposure {
@@ -96,16 +95,18 @@ export interface MarketIndices {
 }
 
 export interface RiskSignal {
-  id: string
   name: string
-  level: string
-  score: number
-  max_score: number
+  key: string
   value: number
-  threshold_yellow: number
-  threshold_red: number
-  description: string
-  history: Array<{ date: string; value: number; level: string }>
+  slope_20d: number
+  signal: string
+  desc: string
+  theory: string
+  accel: number
+  phase: string
+  phase_label: string
+  extremity_pct: number
+  reliable: boolean
 }
 
 export interface RiskSignals {
@@ -154,18 +155,23 @@ export interface MarketWeightStock {
 export interface SignalBacktest {
   summary: {
     total_signals: number
-    win_rate: number
-    avg_return_5d: number
+    evaluated_signals: number
+    win_rate_10d: number
+    win_rate_20d: number
     avg_return_10d: number
+    avg_return_20d: number
   }
-  by_type: Record<string, { count: number; win_rate: number; avg_return: number }>
+  by_type: Record<string, { count: number; win_rate_10d: number; avg_return_10d: number; win_rate_20d: number; avg_return_20d: number }>
   signals: Array<{
     date: string
     type: string
     code: string
     name: string
-    return_5d: number
+    weight_chg?: number
+    confidence?: number
     return_10d: number
+    return_20d: number
+    return_60d?: number
   }>
 }
 

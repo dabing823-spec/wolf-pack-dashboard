@@ -5,17 +5,18 @@ import { KpiCard, KpiGrid, IntroBox, Badge, TableContainer, DataTable } from '..
 import { chartColors, defaultScaleOptions, defaultPluginOptions } from '../lib/chartDefaults'
 import { ETF_LIST, ETF_SHORT_NAMES } from '../lib/constants'
 import '../lib/chartDefaults'
-import type { EtfPageData } from '../types'
+import type { EtfPageData, DateRecord } from '../types'
 
-function getLatestRecord(etfData: EtfPageData) {
-  const dates = etfData.dates || []
-  if (!dates.length) return null
-  const latestDate = dates[dates.length - 1]
-  return etfData.date_records?.[latestDate] ?? null
+function getLatestRecord(etfData: EtfPageData): DateRecord | null {
+  const records = etfData.date_records
+  if (!Array.isArray(records) || records.length === 0) return null
+  return records[records.length - 1] ?? null
 }
 
-function getRecordByDate(etfData: EtfPageData, date: string) {
-  return etfData.date_records?.[date] ?? null
+function getRecordByDate(etfData: EtfPageData, date: string): DateRecord | null {
+  const records = etfData.date_records
+  if (!Array.isArray(records)) return null
+  return records.find(r => r.date === date) ?? null
 }
 
 export function P4EtfHistoryComparison() {
@@ -48,7 +49,7 @@ export function P4EtfHistoryComparison() {
   }, [dates])
 
   // KPIs
-  const nHoldings = latest?.n_holdings || 0
+  const nHoldings = latest?.n_stocks || 0
   const cashPct = latest?.cash_pct || 0
   const latestDate = dates[dates.length - 1] || '-'
   const top5Weight = useMemo(() => {
@@ -84,7 +85,7 @@ export function P4EtfHistoryComparison() {
         label: '持股數',
         data: last30Dates.map(d => {
           const r = getRecordByDate(etfData, d)
-          return r?.n_holdings || 0
+          return r?.n_stocks || 0
         }),
         borderColor: chartColors.purple,
         backgroundColor: 'rgba(168, 85, 247, 0.1)',
@@ -166,9 +167,9 @@ export function P4EtfHistoryComparison() {
     setCompareResult({
       newStocks, exitedStocks, changedStocks,
       cashDelta: (r2.cash_pct || 0) - (r1.cash_pct || 0),
-      holdingsDelta: (r2.n_holdings || 0) - (r1.n_holdings || 0),
+      holdingsDelta: (r2.n_stocks || 0) - (r1.n_stocks || 0),
       cash1: r1.cash_pct || 0, cash2: r2.cash_pct || 0,
-      n1: r1.n_holdings || 0, n2: r2.n_holdings || 0,
+      n1: r1.n_stocks || 0, n2: r2.n_stocks || 0,
     })
   }
 

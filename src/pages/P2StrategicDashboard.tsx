@@ -173,7 +173,7 @@ export function P2StrategicDashboard() {
           <RiskScoreCompact
             score={riskSignals.score} maxScore={riskSignals.max_score} level={riskSignals.level}
             nRed={riskSignals.n_red} nYellow={riskSignals.n_yellow} nGreen={riskSignals.n_green}
-            signals={riskSignals.signals.map(s => ({ name: s.name, level: s.level }))}
+            signals={riskSignals.signals.map(s => ({ name: s.name, level: s.signal }))}
           />
         )}
 
