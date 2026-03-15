@@ -1,0 +1,85 @@
+name: Morning Brief
+
+on:
+  schedule:
+    # 台灣時間 05:00 (UTC 21:00 前一天) — 每週一~五
+    - cron: '0 21 * * 0-4'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  brief:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: |
+          pip install anthropic requests
+
+      - name: Run Market Brief Agent
+        env:
+          GITHUB_ACTIONS: 'true'
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: |
+          cd scripts/agents
+          python market_brief_agent.py --force
+
+      - name: Validate output
+        run: |
+          if [ -f "data/news_analysis.json" ]; then
+            size=$(stat -c%s "data/news_analysis.json")
+            echo "✅ news_analysis.json: $size bytes"
+            if [ "$size" -lt 100 ]; then
+              echo "⚠️ File too small, analysis may have failed"
+            fi
+          else
+            echo "❌ news_analysis.json not found"
+            exit 1
+          fi
+
+      - name: Commit & Push
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add data/news_analysis.json
+          if git diff --cached --quiet; then
+            echo "No changes to commit"
+          else
+            DATE=$(date '+%Y-%m-%d')
+            git commit -m "📰 Morning brief: ${DATE}"
+            git push
+          fi
+
+  notify-failure:
+    runs-on: ubuntu-latest
+    needs: brief
+    if: failure()
+    steps:
+      - name: Send Telegram failure notification
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: |
+          if [ -z "$TELEGRAM_BOT_TOKEN" ] || [ -z "$TELEGRAM_CHAT_ID" ]; then
+            echo "Telegram secrets not set, skipping"
+            exit 0
+          fi
+          MSG="❌ Morning Brief Pipeline 失敗
+📅 $(date '+%Y-%m-%d %H:%M')
+🔗 $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
+          curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+            -H "Content-Type: application/json" \
+            -d "{\"chat_id\": \"${TELEGRAM_CHAT_ID}\", \"text\": \"${MSG}\"}"
