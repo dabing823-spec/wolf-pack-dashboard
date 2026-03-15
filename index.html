@@ -6096,7 +6096,13 @@
         function updateHeaderTimestamp() {
             const el = document.getElementById('header-last-updated');
             if (el && dashboardData && dashboardData.report_date) {
-                el.textContent = '📅 ' + dashboardData.report_date;
+                const rd = dashboardData.report_date;
+                const today = new Date().toISOString().slice(0, 10);
+                if (rd === today) {
+                    el.textContent = rd;
+                } else {
+                    el.textContent = `資料日期 ${rd}`;
+                }
             }
             // R18: Footer system status
             const footerEl = document.getElementById('footer-status');
