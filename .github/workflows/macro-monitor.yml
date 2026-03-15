@@ -1,0 +1,79 @@
+name: Macro Monitor
+
+on:
+  schedule:
+    # 盤前簡報：台灣時間 08:30 (UTC 00:30) — 美股收盤後
+    - cron: '30 0 * * 1-5'
+    # 盤後快速更新：台灣時間 13:35 (UTC 05:35) — 台股收盤後 5 分鐘
+    - cron: '35 5 * * 1-5'
+    # 盤中監控：台灣時間 22:30 (UTC 14:30) — 美股開盤後
+    - cron: '30 14 * * 1-5'
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: 'brief / alert / both'
+        required: false
+        default: 'both'
+
+permissions:
+  contents: write
+
+jobs:
+  monitor:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: pip install requests
+
+      - name: Determine mode
+        id: mode
+        run: |
+          HOUR=$(TZ=Asia/Taipei date +%H)
+          INPUT_MODE="${{ inputs.mode || '' }}"
+          if [ -n "$INPUT_MODE" ]; then
+            echo "mode=$INPUT_MODE" >> $GITHUB_OUTPUT
+          elif [ "$HOUR" = "08" ]; then
+            echo "mode=brief" >> $GITHUB_OUTPUT
+          else
+            echo "mode=both" >> $GITHUB_OUTPUT
+          fi
+          echo "Current TW hour: $HOUR"
+
+      - name: Run Macro Monitor
+        env:
+          LINE_NOTIFY_TOKEN: ${{ secrets.LINE_NOTIFY_TOKEN }}
+        run: |
+          MODE="${{ steps.mode.outputs.mode }}"
+          FLAGS=""
+          if [ "$MODE" = "brief" ] || [ "$MODE" = "both" ]; then
+            FLAGS="$FLAGS --brief"
+          fi
+          if [ "$MODE" = "alert" ] || [ "$MODE" = "both" ]; then
+            FLAGS="$FLAGS --alert"
+          fi
+          if [ -n "$LINE_NOTIFY_TOKEN" ]; then
+            FLAGS="$FLAGS --line"
+          fi
+          python scripts/macro_monitor.py $FLAGS
+
+      - name: Commit updated indices
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add data/strategy.json data/indices_history.json
+          if git diff --cached --quiet; then
+            echo "No changes"
+          else
+            git commit -m "📡 Macro update: $(TZ=Asia/Taipei date '+%Y-%m-%d %H:%M')"
+            git push
+          fi

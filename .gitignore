@@ -2,5 +2,6 @@
 __pycache__/
 *.pyc
 .alert_state.json
+.macro_alert_state.json
 logs/
 history/
