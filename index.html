@@ -53,7 +53,7 @@
             background-color: var(--bg);
             color: var(--text);
             line-height: 1.6;
-            font-size: 15px;
+            font-size: 17px;
         }
 
         /* Header */
@@ -151,7 +151,7 @@
         }
 
         .kpi-label {
-            font-size: 0.85rem;
+            font-size: 0.92rem;
             color: var(--text-muted);
             text-transform: uppercase;
             letter-spacing: 0.05em;
@@ -159,14 +159,14 @@
         }
 
         .kpi-value {
-            font-size: 1.5rem;
+            font-size: 1.6rem;
             font-weight: 700;
             color: var(--accent);
             margin-bottom: 0.25rem;
         }
 
         .kpi-subtext {
-            font-size: 0.75rem;
+            font-size: 0.88rem;
             color: var(--text-muted);
         }
 
@@ -315,7 +315,7 @@
             text-align: left;
             font-weight: 600;
             color: var(--text-muted);
-            font-size: 0.85rem;
+            font-size: 0.9rem;
             text-transform: uppercase;
             border-bottom: 1px solid var(--border);
             cursor: pointer;
@@ -332,7 +332,7 @@
         td {
             padding: 1rem 1rem;
             border-bottom: 1px solid var(--border);
-            font-size: 0.9rem;
+            font-size: 0.95rem;
         }
 
         tr:hover {
@@ -2518,17 +2518,6 @@
                     console.warn('AI research data not available:', e);
                 }
 
-                // Load news analysis data (optional)
-                try {
-                    const newsRes = await fetch(`data/news_analysis.json${cacheBust}`);
-                    if (newsRes.ok) {
-                        newsAnalysisData = await newsRes.json();
-                        console.log('News analysis data loaded');
-                    }
-                } catch (e) {
-                    console.warn('News analysis data not available:', e);
-                }
-
                 console.log('Data loaded successfully');
                 console.log('Dashboard keys:', Object.keys(dashboardData));
                 console.log('ETF Pages keys:', Object.keys(etfPagesData));
@@ -2539,6 +2528,17 @@
             } catch (error) {
                 console.error('Error loading data:', error);
                 showLoadingError();
+            }
+
+            // Load news analysis data independently (doesn't depend on dashboard)
+            try {
+                const newsRes = await fetch(`data/news_analysis.json?t=${Date.now()}`);
+                if (newsRes.ok) {
+                    newsAnalysisData = await newsRes.json();
+                    console.log('News analysis data loaded:', newsAnalysisData.news_analyses?.length, 'articles');
+                }
+            } catch (e) {
+                console.warn('News analysis data not available:', e);
             }
         }
 
@@ -2617,6 +2617,9 @@
         }
 
         function renderPage(pageId) {
+            // p10 doesn't depend on dashboardData
+            if (pageId === 'p10') { renderPage10(); return; }
+
             if (!dashboardData) return;
 
             switch (pageId) {
@@ -2641,9 +2644,6 @@
                     break;
                 case 'p8':
                     renderPage8();
-                    break;
-                case 'p10':
-                    renderPage10();
                     break;
             }
         }
