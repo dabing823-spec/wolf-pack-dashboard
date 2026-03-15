@@ -1060,6 +1060,132 @@
                 padding: 1rem;
             }
         }
+
+        /* ═══ Animations & Micro-interactions ═══ */
+
+        /* Fade-in on page switch */
+        @keyframes fadeSlideIn {
+            from { opacity: 0; transform: translateY(12px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .page.active {
+            animation: fadeSlideIn 0.3s ease-out;
+        }
+
+        /* KPI value count-up pulse */
+        @keyframes valuePop {
+            0% { transform: scale(0.85); opacity: 0.5; }
+            60% { transform: scale(1.05); }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .kpi-value, .risk-score-num {
+            animation: valuePop 0.5s ease-out;
+        }
+
+        /* Signal card stagger entrance */
+        @keyframes cardEnter {
+            from { opacity: 0; transform: translateY(16px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .risk-signal-card {
+            animation: cardEnter 0.35s ease-out both;
+        }
+        .risk-signal-card:nth-child(1) { animation-delay: 0.05s; }
+        .risk-signal-card:nth-child(2) { animation-delay: 0.1s; }
+        .risk-signal-card:nth-child(3) { animation-delay: 0.15s; }
+        .risk-signal-card:nth-child(4) { animation-delay: 0.2s; }
+        .risk-signal-card:nth-child(5) { animation-delay: 0.25s; }
+        .risk-signal-card:nth-child(6) { animation-delay: 0.3s; }
+        .risk-signal-card:nth-child(7) { animation-delay: 0.35s; }
+        .risk-signal-card:nth-child(8) { animation-delay: 0.4s; }
+
+        /* Score ring entrance */
+        @keyframes ringReveal {
+            from { stroke-dashoffset: 377; }
+        }
+
+        #p8-ring {
+            animation: ringReveal 1.2s ease-out;
+        }
+
+        /* Modal entrance */
+        @keyframes modalFadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes modalSlideUp {
+            from { opacity: 0; transform: translateY(30px) scale(0.97); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        .risk-modal-overlay {
+            animation: modalFadeIn 0.2s ease-out;
+        }
+
+        .risk-modal-content {
+            animation: modalSlideUp 0.3s ease-out;
+        }
+
+        /* Nav button press effect */
+        nav button:active {
+            transform: scale(0.95);
+        }
+
+        /* Table row highlight slide */
+        tr {
+            transition: background-color 0.15s ease;
+        }
+
+        /* Badge pulse for red signals */
+        @keyframes subtlePulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        .risk-accel-accelerating {
+            animation: subtlePulse 2s ease-in-out infinite;
+        }
+
+        /* KPI card hover lift (global) */
+        .kpi-card {
+            transition: all 0.2s ease;
+        }
+
+        .kpi-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+
+        /* Smooth scroll for table containers */
+        .table-scroll {
+            scroll-behavior: smooth;
+        }
+
+        /* Risk banner hover glow on P2 */
+        #p2-risk-banner {
+            transition: border-color 0.2s, box-shadow 0.3s, transform 0.2s;
+        }
+
+        #p2-risk-banner:hover {
+            transform: translateY(-1px);
+        }
+
+        /* Details/summary smooth */
+        details[open] > summary {
+            margin-bottom: 0.5rem;
+        }
+
+        details summary {
+            transition: color 0.2s;
+        }
+
+        details summary:hover {
+            color: var(--text);
+        }
     </style>
 </head>
 <body>
@@ -4960,23 +5086,158 @@
             }
         }
 
-        function _p8Sparkline(data, width, height) {
-            if (!data || data.length < 2) return '';
-            const vals = data.map(d => d.close);
-            const min = Math.min(...vals);
-            const max = Math.max(...vals);
-            const range = max - min || 1;
-            const points = vals.map((v, i) => {
-                const x = (i / (vals.length - 1)) * width;
-                const y = height - ((v - min) / range) * (height - 4) - 2;
-                return `${x.toFixed(1)},${y.toFixed(1)}`;
+        // --- Chart.js sparkline infrastructure ---
+        let _p8SparkCharts = {};
+        let _p8ModalChart = null;
+
+        function _p8GetLineColor(data) {
+            if (!data || data.length < 2) return '#8b8fa3';
+            const first = data[0].close;
+            const last = data[data.length - 1].close;
+            return last > first ? '#ef4444' : last < first ? '#22c55e' : '#8b8fa3';
+        }
+
+        function _p8MakeGradient(ctx, canvas, color) {
+            const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+            gradient.addColorStop(0, color + '40');
+            gradient.addColorStop(1, color + '00');
+            return gradient;
+        }
+
+        function _p8InitSparkCharts(rs) {
+            Object.values(_p8SparkCharts).forEach(c => c.destroy());
+            _p8SparkCharts = {};
+            const history = rs.history || {};
+            rs.signals.forEach(s => {
+                const sparkData = history[s.key] || [];
+                if (!sparkData || sparkData.length < 2) return;
+                const canvas = document.getElementById('p8-spark-' + s.key);
+                if (!canvas) return;
+                const ctx = canvas.getContext('2d');
+                const color = _p8GetLineColor(sparkData);
+                const gradient = _p8MakeGradient(ctx, canvas, color);
+                _p8SparkCharts[s.key] = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: sparkData.map(d => d.date),
+                        datasets: [{
+                            data: sparkData.map(d => d.close),
+                            borderColor: color,
+                            borderWidth: 1.5,
+                            tension: 0.3,
+                            pointRadius: 0,
+                            pointHoverRadius: 3,
+                            fill: true,
+                            backgroundColor: gradient,
+                        }]
+                    },
+                    options: {
+                        responsive: false,
+                        maintainAspectRatio: false,
+                        animation: { duration: 800 },
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: {
+                                enabled: true,
+                                mode: 'index',
+                                intersect: false,
+                                callbacks: {
+                                    title: (items) => items[0].label,
+                                    label: (item) => item.formattedValue,
+                                },
+                                bodyFont: { size: 10 },
+                                titleFont: { size: 10 },
+                                padding: 4,
+                            }
+                        },
+                        scales: {
+                            x: { display: false },
+                            y: { display: false },
+                        },
+                        interaction: { mode: 'index', intersect: false },
+                    }
+                });
             });
-            const last = vals[vals.length - 1];
-            const first = vals[0];
-            const color = last > first ? 'var(--red)' : last < first ? 'var(--green)' : 'var(--text-muted)';
-            return `<svg width="${width}" height="${height}" style="display:block;">
-                <polyline points="${points.join(' ')}" fill="none" stroke="${color}" stroke-width="1.5" stroke-linejoin="round"/>
-            </svg>`;
+        }
+
+        function _p8InitModalChart(histData) {
+            if (_p8ModalChart) { _p8ModalChart.destroy(); _p8ModalChart = null; }
+            if (!histData || histData.length < 2) return;
+            const canvas = document.getElementById('p8-modal-chart-canvas');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            const color = _p8GetLineColor(histData);
+            const gradient = _p8MakeGradient(ctx, canvas, color);
+            const lastVal = histData[histData.length - 1].close;
+            _p8ModalChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: histData.map(d => d.date),
+                    datasets: [{
+                        data: histData.map(d => d.close),
+                        borderColor: color,
+                        borderWidth: 2,
+                        tension: 0.3,
+                        pointRadius: 0,
+                        pointHoverRadius: 4,
+                        fill: true,
+                        backgroundColor: gradient,
+                    }]
+                },
+                options: {
+                    responsive: false,
+                    maintainAspectRatio: false,
+                    animation: { duration: 600 },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            enabled: true,
+                            mode: 'index',
+                            intersect: false,
+                            callbacks: {
+                                title: (items) => items[0].label,
+                                label: (item) => item.formattedValue,
+                            },
+                            bodyFont: { size: 11 },
+                            titleFont: { size: 11 },
+                            padding: 6,
+                        },
+                        annotation: {
+                            annotations: {
+                                currentLine: {
+                                    type: 'line',
+                                    yMin: lastVal,
+                                    yMax: lastVal,
+                                    borderColor: color + '80',
+                                    borderWidth: 1,
+                                    borderDash: [4, 4],
+                                    label: {
+                                        display: true,
+                                        content: lastVal.toFixed(4),
+                                        position: 'end',
+                                        backgroundColor: color + 'CC',
+                                        font: { size: 9 },
+                                        padding: 3,
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            display: true,
+                            ticks: { maxRotation: 0, autoSkip: true, maxTicksLimit: 6, color: '#8b8fa3', font: { size: 10 } },
+                            grid: { color: 'rgba(255,255,255,0.04)' },
+                        },
+                        y: {
+                            display: true,
+                            ticks: { color: '#8b8fa3', font: { size: 10 } },
+                            grid: { color: 'rgba(255,255,255,0.04)' },
+                        },
+                    },
+                    interaction: { mode: 'index', intersect: false },
+                }
+            });
         }
 
         function renderP8Signals(rs) {
