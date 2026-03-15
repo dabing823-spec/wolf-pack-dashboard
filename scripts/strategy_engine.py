@@ -946,8 +946,35 @@ def calc_timing_score(dashboard):
 # Main
 # ═══════════════════════════════════════
 
+def _fetch_yahoo_quote(symbol, headers):
+    """Fetch a single symbol from Yahoo Finance. Returns (price, prev_close, change, change_pct) or Nones."""
+    import requests
+    try:
+        r = requests.get(
+            f'https://query1.finance.yahoo.com/v8/finance/chart/{symbol}?range=5d&interval=1d',
+            headers=headers, timeout=10
+        )
+        if r.status_code == 200:
+            res = r.json().get('chart', {}).get('result', [{}])[0]
+            closes = res.get('indicators', {}).get('quote', [{}])[0].get('close', [])
+            # Filter out None values
+            closes = [c for c in closes if c is not None]
+            if len(closes) >= 2:
+                price = round(closes[-1], 2)
+                prev = round(closes[-2], 2)
+                chg = round(price - prev, 2)
+                chg_pct = round((price - prev) / prev * 100, 2) if prev else 0
+                return price, prev, chg, chg_pct
+            elif closes:
+                price = round(closes[-1], 2)
+                return price, None, None, None
+    except Exception as e:
+        print(f"  [MKT] Yahoo fetch {symbol} failed: {e}")
+    return None, None, None, None
+
+
 def fetch_market_indices_live():
-    """Fetch VIX, VIXTWN, CNN Fear & Greed Index."""
+    """Fetch VIX, VIXTWN, CNN Fear & Greed, DXY, Oil, Gold, US 10Y Yield."""
     import requests, re
     result = {}
     headers = {
@@ -957,25 +984,30 @@ def fetch_market_indices_live():
 
     print("  [MKT] Fetching market indices...")
 
-    # VIX (S&P 500) via Yahoo Finance
-    try:
-        r = requests.get('https://query1.finance.yahoo.com/v8/finance/chart/%5EVIX?range=2d&interval=1d',
-                         headers=headers, timeout=10)
-        if r.status_code == 200:
-            data = r.json()
-            closes = data.get('chart', {}).get('result', [{}])[0].get('indicators', {}).get('quote', [{}])[0].get('close', [])
-            if closes:
-                result['vix'] = round(closes[-1], 2)
-                print(f"  [MKT] VIX S&P500: {result['vix']}")
-    except Exception as e:
-        print(f"  [MKT] VIX fetch failed: {e}")
+    # ── Yahoo Finance symbols ──
+    yahoo_symbols = {
+        'vix':   {'symbol': '%5EVIX',   'label': 'VIX S&P500'},
+        'dxy':   {'symbol': 'DX-Y.NYB', 'label': 'DXY 美元指數'},
+        'oil':   {'symbol': 'CL%3DF',   'label': 'WTI 原油'},
+        'gold':  {'symbol': 'GC%3DF',   'label': '黃金'},
+        'us10y': {'symbol': '%5ETNX',   'label': 'US 10Y 殖利率'},
+    }
 
-    # VIXTWN (台灣 VIX) via TAIFEX website scraping
+    for key, info in yahoo_symbols.items():
+        price, prev, chg, chg_pct = _fetch_yahoo_quote(info['symbol'], headers)
+        if price is not None:
+            result[key] = price
+            if chg is not None:
+                result[f'{key}_prev'] = prev
+                result[f'{key}_chg'] = chg
+                result[f'{key}_chg_pct'] = chg_pct
+            print(f"  [MKT] {info['label']}: {price}" + (f" ({chg:+.2f}, {chg_pct:+.2f}%)" if chg is not None else ""))
+
+    # ── VIXTWN (台灣 VIX) via TAIFEX ──
     try:
         r = requests.get('https://www.taifex.com.tw/cht/9/VIXQuote',
                          headers={'User-Agent': headers['User-Agent']}, timeout=10)
         if r.status_code == 200:
-            # Parse VIX value from page - look for the latest close value
             matches = re.findall(r'>(\d{1,3}\.\d{2})<', r.text)
             if matches:
                 result['vixtwn'] = float(matches[0])
@@ -985,7 +1017,7 @@ def fetch_market_indices_live():
     except Exception as e:
         print(f"  [MKT] VIXTWN fetch failed: {e}")
 
-    # CNN Fear & Greed (need browser-like headers)
+    # ── CNN Fear & Greed ──
     try:
         cnn_headers = {**headers, 'Referer': 'https://edition.cnn.com/markets/fear-and-greed'}
         r = requests.get('https://production.dataviz.cnn.io/index/fearandgreed/graphdata',

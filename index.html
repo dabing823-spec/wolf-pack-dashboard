@@ -985,7 +985,7 @@
 
             <!-- Page Intro -->
             <div style="margin-bottom: 1.25rem; padding: 0.75rem 1rem; background: rgba(79,142,247,0.06); border-radius: 8px; border-left: 3px solid var(--green); font-size: 0.9rem; color: var(--text-secondary); line-height: 1.7;">
-                綜合 5 檔主動式 ETF 的市場指標與共識分析。上方為即時市場數據（VIX、恐懼貪婪），下方為經理人持股共識與異動摘要。
+                綜合 5 檔主動式 ETF 的市場指標與共識分析。上方為即時全球市場儀表板（台股指數 + 五大總經指標），下方為經理人持股共識與異動摘要。
             </div>
 
             <!-- Market Indices -->
@@ -1016,6 +1016,72 @@
                     <div class="kpi-subtext" id="p2-idx-feargreed-sub">-</div>
                 </div>
             </div>
+
+            <!-- Global Macro Indicators -->
+            <div style="margin-bottom: 0.5rem; font-size: 0.8rem; color: var(--text-secondary); padding-left: 0.25rem;">
+                Oil 看成本 | DXY 看資金 | VIX 看情緒 | Gold 看避險 | Yield 看利率
+            </div>
+            <div class="kpi-grid" style="margin-bottom: 1rem;">
+                <div class="kpi-card">
+                    <div class="kpi-label">DXY 美元指數 <span style="font-size:0.7rem;color:var(--text-secondary)">資金</span></div>
+                    <div class="kpi-value" id="p2-idx-dxy">-</div>
+                    <div class="kpi-subtext" id="p2-idx-dxy-sub">-</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-label">WTI 原油 <span style="font-size:0.7rem;color:var(--text-secondary)">成本</span></div>
+                    <div class="kpi-value" id="p2-idx-oil">-</div>
+                    <div class="kpi-subtext" id="p2-idx-oil-sub">-</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-label">黃金 <span style="font-size:0.7rem;color:var(--text-secondary)">避險</span></div>
+                    <div class="kpi-value" id="p2-idx-gold">-</div>
+                    <div class="kpi-subtext" id="p2-idx-gold-sub">-</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-label">US 10Y 殖利率 <span style="font-size:0.7rem;color:var(--text-secondary)">利率</span></div>
+                    <div class="kpi-value" id="p2-idx-us10y">-</div>
+                    <div class="kpi-subtext" id="p2-idx-us10y-sub">-</div>
+                </div>
+            </div>
+
+            <!-- Macro Reading Guide -->
+            <details style="margin-bottom: 1rem; background: rgba(79,142,247,0.04); border-radius: 8px; padding: 0;">
+                <summary style="cursor:pointer; padding: 0.6rem 1rem; font-size: 0.85rem; color: var(--text-secondary);">
+                    五大指標閱讀說明 (點擊展開)
+                </summary>
+                <div style="padding: 0.5rem 1rem 0.75rem; font-size: 0.8rem; color: var(--text-secondary); line-height: 1.8;">
+                    <table style="width:100%; border-collapse:collapse; font-size:0.8rem;">
+                        <tr style="border-bottom:1px solid rgba(255,255,255,0.06);">
+                            <td style="padding:6px 4px; color:var(--text); font-weight:600; width:80px;">VIX</td>
+                            <td style="padding:6px 4px; width:60px;">看情緒</td>
+                            <td style="padding:6px 4px;">&lt;15 低波動 (多頭穩定) | 15-20 正常 | 20-30 偏高 (風險升溫) | &gt;30 恐慌 (可能接近轉折)</td>
+                        </tr>
+                        <tr style="border-bottom:1px solid rgba(255,255,255,0.06);">
+                            <td style="padding:6px 4px; color:var(--text); font-weight:600;">DXY</td>
+                            <td style="padding:6px 4px;">看資金</td>
+                            <td style="padding:6px 4px;">美元走強 → 全球流動性收縮、新興市場承壓、原物料被壓制；走弱 → 資金外流尋找機會、股市/商品容易有行情</td>
+                        </tr>
+                        <tr style="border-bottom:1px solid rgba(255,255,255,0.06);">
+                            <td style="padding:6px 4px; color:var(--text); font-weight:600;">Oil</td>
+                            <td style="padding:6px 4px;">看成本</td>
+                            <td style="padding:6px 4px;">需求推升 → 經濟擴張利多；供給衝擊推升 → 通膨壓力利空；崩跌 → 市場擔憂衰退</td>
+                        </tr>
+                        <tr style="border-bottom:1px solid rgba(255,255,255,0.06);">
+                            <td style="padding:6px 4px; color:var(--text); font-weight:600;">Gold</td>
+                            <td style="padding:6px 4px;">看避險</td>
+                            <td style="padding:6px 4px;">股跌金漲 → 避險資金移動；股金齊漲 → 通膨預期或貨幣信用疑慮</td>
+                        </tr>
+                        <tr>
+                            <td style="padding:6px 4px; color:var(--text); font-weight:600;">US 10Y</td>
+                            <td style="padding:6px 4px;">看利率</td>
+                            <td style="padding:6px 4px;">殖利率升 → 經濟轉強或通膨擔憂 (升太快壓制股市)；殖利率降 → 經濟降溫、降息預期 (利多股市)</td>
+                        </tr>
+                    </table>
+                    <div style="margin-top:8px; padding-top:6px; border-top:1px solid rgba(255,255,255,0.06); font-style:italic;">
+                        當五大指標方向同步移動時，市場趨勢通常更加明確。
+                    </div>
+                </div>
+            </details>
 
             <!-- ETF Action KPIs -->
             <div class="kpi-grid">
@@ -2545,6 +2611,36 @@
                         score <= 25 ? DOWN_COLOR : score <= 45 ? 'var(--orange)' : score <= 55 ? 'var(--text)' : score <= 75 ? UP_COLOR : UP_COLOR;
                     const ratingMap = { 'Extreme Fear': '極度恐懼', 'Fear': '恐懼', 'Neutral': '中性', 'Greed': '貪婪', 'Extreme Greed': '極度貪婪' };
                     document.getElementById('p2-idx-feargreed-sub').textContent = ratingMap[rating] || rating || '-';
+                }
+            }
+
+                // ── Global Macro: DXY, Oil, Gold, US 10Y ──
+                const macroItems = [
+                    { key: 'dxy',   id: 'p2-idx-dxy',   format: v => v.toFixed(2) },
+                    { key: 'oil',   id: 'p2-idx-oil',   format: v => v.toFixed(2) },
+                    { key: 'gold',  id: 'p2-idx-gold',  format: v => v.toFixed(1) },
+                    { key: 'us10y', id: 'p2-idx-us10y', format: v => v.toFixed(3) },
+                ];
+                for (const item of macroItems) {
+                    const val = mi[item.key];
+                    if (val != null) {
+                        const el = document.getElementById(item.id);
+                        const subEl = document.getElementById(item.id + '-sub');
+                        el.textContent = item.format(val);
+
+                        const chg = mi[item.key + '_chg'];
+                        const chgPct = mi[item.key + '_chg_pct'];
+                        if (chg != null && chgPct != null) {
+                            // For VIX/US10Y: rising = risk, use red; for others: rising = green per Taiwan convention
+                            const isInverse = (item.key === 'us10y');
+                            const color = isInverse
+                                ? (chg >= 0 ? UP_COLOR : DOWN_COLOR)
+                                : (chg >= 0 ? UP_COLOR : DOWN_COLOR);
+                            el.style.color = color;
+                            subEl.textContent = `${chg >= 0 ? '+' : ''}${chg.toFixed(2)} (${chgPct >= 0 ? '+' : ''}${chgPct.toFixed(2)}%)`;
+                            subEl.style.color = color;
+                        }
+                    }
                 }
             }
 
