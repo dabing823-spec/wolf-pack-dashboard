@@ -818,6 +818,7 @@
             <button class="nav-btn" data-page="p5">🧠 策略分析</button>
             <button class="nav-btn" data-page="p6">📊 跟單回測</button>
             <button class="nav-btn" data-page="p7">🏛 0050 / 市值</button>
+            <button class="nav-btn" data-page="p8">🛡 風險訊號</button>
         </nav>
     </header>
 
@@ -1740,6 +1741,56 @@
             </div>
         </div>
 
+        <!-- Page 8: 風險訊號 -->
+        <div class="page" id="p8">
+            <div class="page-title">🛡 宏觀風險訊號儀表板</div>
+
+            <div style="margin-bottom: 1.25rem; padding: 0.75rem 1rem; background: rgba(79,142,247,0.06); border-radius: 8px; border-left: 3px solid var(--cyan); font-size: 0.9rem; color: var(--text-secondary); line-height: 1.7;">
+                基於選擇權隱含特徵研究與流動性風險實驗，追蹤 8 個宏觀風險指標的 20 日趨勢斜率。<br>
+                核心理論：<strong>VIX 斜率</strong>比絕對值重要、<strong>SPY/JPY</strong> 套利平倉是最強領先指標、<strong>HYG/TLT</strong> 反映流動性枯竭速度。
+            </div>
+
+            <!-- Score -->
+            <div style="display:flex; align-items:center; gap:2rem; margin-bottom:2rem; padding:1.5rem; background:var(--card); border-radius:12px; border:1px solid var(--border);">
+                <div id="p8-score-ring" style="position:relative; width:140px; height:140px; flex-shrink:0;">
+                    <svg width="140" height="140" viewBox="0 0 140 140">
+                        <circle cx="70" cy="70" r="60" fill="none" stroke="var(--border)" stroke-width="10"/>
+                        <circle id="p8-ring" cx="70" cy="70" r="60" fill="none" stroke="var(--green)" stroke-width="10"
+                            stroke-dasharray="377" stroke-dashoffset="377" stroke-linecap="round"
+                            transform="rotate(-90 70 70)" style="transition:stroke-dashoffset 1s ease, stroke 0.5s;"/>
+                    </svg>
+                    <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;">
+                        <div id="p8-score-num" style="font-size:2.5rem;font-weight:700;line-height:1;">-</div>
+                        <div style="font-size:0.75rem;color:var(--text-muted);">/10</div>
+                    </div>
+                </div>
+                <div>
+                    <div id="p8-score-label" style="font-size:1.5rem;font-weight:600;margin-bottom:0.5rem;">載入中...</div>
+                    <div id="p8-score-detail" style="color:var(--text-secondary);font-size:0.9rem;line-height:1.6;"></div>
+                    <div id="p8-score-time" style="color:var(--text-muted);font-size:0.8rem;margin-top:0.5rem;"></div>
+                </div>
+            </div>
+
+            <!-- Signal Cards Grid -->
+            <div id="p8-signals-grid" style="display:grid; grid-template-columns:repeat(2, 1fr); gap:1rem; margin-bottom:2rem;"></div>
+
+            <!-- Research Basis (collapsible) -->
+            <details style="background:var(--card); border-radius:8px; border:1px solid var(--border); padding:1rem 1.25rem;">
+                <summary style="cursor:pointer; font-weight:600; color:var(--text); font-size:0.95rem;">研究依據與理論基礎</summary>
+                <div style="margin-top:1rem; font-size:0.85rem; color:var(--text-secondary); line-height:1.8;">
+                    <p><strong>1. SPY/JPY 套利平倉（研究重要度 19.9%）</strong><br>
+                    當日圓走強（JPY 升值），代表全球套利交易（借日圓買美股）正在平倉。SPY/JPY 比值下降是美股崩盤的最強領先指標。</p>
+                    <p><strong>2. VIX 20日斜率（研究重要度 13.3%）</strong><br>
+                    波動率的緩步墊高比絕對數值更重要。VIX 從 15 緩升到 25 的過程，比突然跳到 30 更危險。</p>
+                    <p><strong>3. HYG/TLT 流動性（研究重要度 12.5%）</strong><br>
+                    資金從高收益債 (HYG) 撤回長期國債 (TLT) 的速度，反映市場流動性枯竭程度。比值快速下降代表 risk-off。</p>
+                    <p><strong>4. 布林通道寬度（微觀特徵 32.7%）</strong><br>
+                    通道的極速收縮或擴張是閃崩最直接的微觀特徵（分鐘級，本儀表板追蹤日線趨勢）。</p>
+                    <p style="color:var(--text-muted);margin-top:0.5rem;"><em>資料來源：MODEL_ANALYSIS_REPORT_20260313 & RESEARCH_LOG_20260313</em></p>
+                </div>
+            </details>
+        </div>
+
     </div>
 
     <script>
@@ -1905,6 +1956,9 @@
                     break;
                 case 'p7':
                     renderPage7();
+                    break;
+                case 'p8':
+                    renderPage8();
                     break;
             }
         }
@@ -4237,6 +4291,98 @@
             }
 
             tbody.innerHTML = data.stocks.map(s => _p7StockRow(s, colsMW)).join('');
+        }
+
+        // ============================================================================
+        // Page 8: 風險訊號
+        // ============================================================================
+        function renderPage8() {
+            const rs = strategyData && strategyData.risk_signals;
+            if (!rs || !rs.signals) {
+                document.getElementById('p8-score-num').textContent = '-';
+                document.getElementById('p8-score-label').textContent = '暫無資料';
+                return;
+            }
+            renderP8Score(rs);
+            renderP8Signals(rs);
+        }
+
+        function renderP8Score(rs) {
+            const score = rs.score || 0;
+            const ring = document.getElementById('p8-ring');
+            const numEl = document.getElementById('p8-score-num');
+            const labelEl = document.getElementById('p8-score-label');
+            const detailEl = document.getElementById('p8-score-detail');
+            const timeEl = document.getElementById('p8-score-time');
+
+            // Ring animation: offset = 377 * (1 - score/10)
+            const offset = 377 * (1 - score / 10);
+            const color = score >= 7 ? 'var(--red)' : score >= 4 ? 'var(--orange)' : 'var(--green)';
+            ring.style.strokeDashoffset = offset;
+            ring.style.stroke = color;
+            numEl.textContent = score.toFixed(1);
+            numEl.style.color = color;
+
+            const levelMap = { high: '高度警戒', medium: '中度警戒', low: '風險偏低' };
+            labelEl.textContent = levelMap[rs.level] || rs.level;
+            labelEl.style.color = color;
+
+            detailEl.innerHTML = `<span style="color:var(--red);">&#9679;</span> 紅燈 ${rs.n_red} 個 &nbsp;`
+                + `<span style="color:var(--orange);">&#9679;</span> 黃燈 ${rs.n_yellow} 個 &nbsp;`
+                + `<span style="color:var(--green);">&#9679;</span> 綠燈 ${rs.n_green} 個`;
+
+            if (rs.updated_at) {
+                timeEl.textContent = `更新時間：${rs.updated_at}`;
+            }
+        }
+
+        function _p8Sparkline(data, width, height) {
+            if (!data || data.length < 2) return '';
+            const vals = data.map(d => d.close);
+            const min = Math.min(...vals);
+            const max = Math.max(...vals);
+            const range = max - min || 1;
+            const points = vals.map((v, i) => {
+                const x = (i / (vals.length - 1)) * width;
+                const y = height - ((v - min) / range) * (height - 4) - 2;
+                return `${x.toFixed(1)},${y.toFixed(1)}`;
+            });
+            const last = vals[vals.length - 1];
+            const first = vals[0];
+            const color = last > first ? 'var(--red)' : last < first ? 'var(--green)' : 'var(--text-muted)';
+            return `<svg width="${width}" height="${height}" style="display:block;">
+                <polyline points="${points.join(' ')}" fill="none" stroke="${color}" stroke-width="1.5" stroke-linejoin="round"/>
+            </svg>`;
+        }
+
+        function renderP8Signals(rs) {
+            const grid = document.getElementById('p8-signals-grid');
+            const history = rs.history || {};
+
+            grid.innerHTML = rs.signals.map(s => {
+                const signalColor = s.signal === 'red' ? 'var(--red)' : s.signal === 'yellow' ? 'var(--orange)' : 'var(--green)';
+                const signalIcon = s.signal === 'red' ? '&#9650;' : s.signal === 'yellow' ? '&#9644;' : '&#9660;';
+                const sparkData = history[s.key] || [];
+                const sparkHtml = _p8Sparkline(sparkData, 120, 32);
+                const valStr = s.value != null ? (typeof s.value === 'number' ? s.value.toFixed(2) : s.value) : '-';
+
+                return `<div style="background:var(--card); border-radius:10px; border:1px solid var(--border); padding:1rem 1.25rem; display:flex; flex-direction:column; gap:0.5rem;">
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <div style="display:flex; align-items:center; gap:0.5rem;">
+                            <span style="color:${signalColor}; font-size:1.1rem;">${signalIcon}</span>
+                            <span style="font-weight:600; font-size:0.95rem;">${s.name}</span>
+                        </div>
+                        <span style="font-size:1.1rem; font-weight:700; color:${signalColor};">${valStr}</span>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; align-items:flex-end;">
+                        <div style="font-size:0.8rem; color:var(--text-muted); line-height:1.5; flex:1;">
+                            ${s.desc}<br>
+                            <span style="font-size:0.75rem; opacity:0.7;">${s.theory || ''}</span>
+                        </div>
+                        <div style="flex-shrink:0; margin-left:0.75rem;">${sparkHtml}</div>
+                    </div>
+                </div>`;
+            }).join('');
         }
 
         // ============================================================================

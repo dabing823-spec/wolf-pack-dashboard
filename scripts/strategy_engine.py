@@ -72,6 +72,22 @@ THRESHOLD_0050_IN = 40    # rank <= 40 且不在 0050 → 潛在納入
 THRESHOLD_0050_OUT = 60   # rank > 60 且在 0050 → 潛在剔除
 
 # ═══════════════════════════════════════
+# 風險訊號設定
+# ═══════════════════════════════════════
+RISK_SYMBOLS = {
+    'vix':   '%5EVIX',
+    'dxy':   'DX-Y.NYB',
+    'oil':   'CL%3DF',
+    'gold':  'GC%3DF',
+    'us10y': '%5ETNX',
+    'spy':   'SPY',
+    'jpy':   'JPY%3DX',
+    'hyg':   'HYG',
+    'tlt':   'TLT',
+}
+INDICES_HISTORY_PATH = DATA_DIR / "indices_history.json"
+
+# ═══════════════════════════════════════
 # 產業對照表（常見台股代碼 -> 產業）
 # ═══════════════════════════════════════
 INDUSTRY_MAP = {
@@ -1205,6 +1221,299 @@ def calc_0050_and_market_weight():
 
 
 # ═══════════════════════════════════════
+# K. Risk Signals (宏觀風險訊號)
+# ═══════════════════════════════════════
+
+def fetch_indices_history():
+    """抓取 9 個風險指標的 60 天歷史，合併到 indices_history.json"""
+    import requests as _req
+
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 '
+                      '(KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'Accept': 'application/json',
+    }
+
+    # Load existing history
+    history = {}
+    if INDICES_HISTORY_PATH.exists():
+        try:
+            history = load_json(INDICES_HISTORY_PATH)
+            print(f"  [K] Loaded existing history: {len(history)} symbols")
+        except Exception:
+            pass
+
+    print("  [K] Fetching indices history (3 months)...")
+
+    for key, symbol in RISK_SYMBOLS.items():
+        try:
+            url = (f'https://query1.finance.yahoo.com/v8/finance/chart/{symbol}'
+                   f'?range=3mo&interval=1d')
+            r = _req.get(url, headers=headers, timeout=15)
+            if r.status_code != 200:
+                print(f"      {key}: HTTP {r.status_code}")
+                continue
+
+            chart = r.json().get('chart', {}).get('result', [{}])[0]
+            timestamps = chart.get('timestamp', [])
+            closes = chart.get('indicators', {}).get('quote', [{}])[0].get('close', [])
+
+            if not timestamps or not closes:
+                print(f"      {key}: no data")
+                continue
+
+            new_records = {}
+            for ts, c in zip(timestamps, closes):
+                if c is not None:
+                    dt = datetime.utcfromtimestamp(ts).strftime('%Y-%m-%d')
+                    new_records[dt] = round(c, 4)
+
+            # Merge with existing (keep latest 90 days)
+            existing = {r['date']: r['close'] for r in history.get(key, [])}
+            existing.update(new_records)
+
+            sorted_dates = sorted(existing.keys())[-90:]
+            history[key] = [{'date': d, 'close': existing[d]} for d in sorted_dates]
+
+            print(f"      {key}: {len(history[key])} days")
+            time.sleep(0.3)
+
+        except Exception as e:
+            print(f"      {key} failed: {e}")
+
+    # Append Fear & Greed (from CNN API, today only)
+    try:
+        cnn_headers = {**headers, 'Referer': 'https://edition.cnn.com/markets/fear-and-greed'}
+        r = _req.get('https://production.dataviz.cnn.io/index/fearandgreed/graphdata',
+                     headers=cnn_headers, timeout=10)
+        if r.status_code == 200:
+            fg = r.json().get('fear_and_greed', {})
+            if fg.get('score') is not None:
+                today = datetime.now().strftime('%Y-%m-%d')
+                existing_fg = {r['date']: r['close'] for r in history.get('fear_greed', [])}
+                existing_fg[today] = round(fg['score'], 1)
+                sorted_dates = sorted(existing_fg.keys())[-90:]
+                history['fear_greed'] = [{'date': d, 'close': existing_fg[d]} for d in sorted_dates]
+                print(f"      fear_greed: {len(history['fear_greed'])} days")
+    except Exception as e:
+        print(f"      fear_greed failed: {e}")
+
+    # Save history
+    save_json(INDICES_HISTORY_PATH, history)
+    print(f"  [K] History saved: {len(history)} symbols")
+
+    return history
+
+
+def _slope_20d(values):
+    """計算最近 20 天的線性回歸斜率（每日平均變化量）"""
+    import numpy as np
+    recent = values[-20:] if len(values) >= 20 else values
+    if len(recent) < 5:
+        return 0.0
+    x = np.arange(len(recent), dtype=float)
+    y = np.array(recent, dtype=float)
+    slope = np.polyfit(x, y, 1)[0]
+    return round(float(slope), 4)
+
+
+def _ratio_series(hist_a, hist_b):
+    """計算兩個序列的比值序列（按日期對齊）"""
+    map_b = {r['date']: r['close'] for r in hist_b}
+    result = []
+    for r in hist_a:
+        b_val = map_b.get(r['date'])
+        if b_val and b_val != 0:
+            result.append({'date': r['date'], 'close': round(r['close'] / b_val, 6)})
+    return result
+
+
+def calc_risk_signals(history):
+    """根據研究報告計算 8 個風險訊號 + 總分"""
+    print("  [K] Calculating risk signals...")
+
+    signals = []
+
+    def _get_closes(key):
+        return [r['close'] for r in history.get(key, [])]
+
+    def _latest(key):
+        data = history.get(key, [])
+        return data[-1]['close'] if data else None
+
+    # 1. VIX 趨勢
+    vix_vals = _get_closes('vix')
+    vix_slope = _slope_20d(vix_vals)
+    vix_latest = _latest('vix')
+    if vix_slope > 0.3 or (vix_latest and vix_latest > 30):
+        vix_signal = 'red'
+    elif vix_slope > 0.1 or (vix_latest and vix_latest > 25):
+        vix_signal = 'yellow'
+    else:
+        vix_signal = 'green'
+    signals.append({
+        'name': 'VIX 趨勢', 'key': 'vix', 'value': vix_latest,
+        'slope_20d': vix_slope, 'signal': vix_signal,
+        'desc': f'20日斜率 {vix_slope:+.2f}/日' + (f'，當前 {vix_latest:.1f}' if vix_latest else ''),
+        'theory': '波動率的緩步墊高比絕對數值更重要（研究重要度 13.3%）',
+    })
+
+    # 2. SPY/JPY 套利平倉壓力
+    spy_jpy = _ratio_series(history.get('spy', []), history.get('jpy', []))
+    spy_jpy_vals = [r['close'] for r in spy_jpy]
+    spy_jpy_slope = _slope_20d(spy_jpy_vals)
+    if spy_jpy_slope < -0.01:
+        sj_signal = 'red'
+    elif spy_jpy_slope < -0.003:
+        sj_signal = 'yellow'
+    else:
+        sj_signal = 'green'
+    signals.append({
+        'name': '套利平倉壓力', 'key': 'spy_jpy', 'value': round(spy_jpy_vals[-1], 4) if spy_jpy_vals else None,
+        'slope_20d': spy_jpy_slope, 'signal': sj_signal,
+        'desc': f'SPY/JPY 20日斜率 {spy_jpy_slope:+.4f}',
+        'theory': '日圓套利平倉是美股崩盤最強領先指標（研究重要度 19.9%）',
+    })
+
+    # 3. HYG/TLT 流動性枯竭
+    hyg_tlt = _ratio_series(history.get('hyg', []), history.get('tlt', []))
+    hyg_tlt_vals = [r['close'] for r in hyg_tlt]
+    hyg_tlt_slope = _slope_20d(hyg_tlt_vals)
+    if hyg_tlt_slope < -0.003:
+        ht_signal = 'red'
+    elif hyg_tlt_slope < -0.001:
+        ht_signal = 'yellow'
+    else:
+        ht_signal = 'green'
+    signals.append({
+        'name': '流動性枯竭', 'key': 'hyg_tlt', 'value': round(hyg_tlt_vals[-1], 4) if hyg_tlt_vals else None,
+        'slope_20d': hyg_tlt_slope, 'signal': ht_signal,
+        'desc': f'HYG/TLT 20日斜率 {hyg_tlt_slope:+.4f}',
+        'theory': '資金從垃圾債撤回國債的速度反映流動性枯竭（研究重要度 12.5%）',
+    })
+
+    # 4. 美元壓力
+    dxy_vals = _get_closes('dxy')
+    dxy_slope = _slope_20d(dxy_vals)
+    if dxy_slope > 0.3:
+        dxy_signal = 'red'
+    elif dxy_slope > 0.1:
+        dxy_signal = 'yellow'
+    else:
+        dxy_signal = 'green'
+    signals.append({
+        'name': '美元壓力', 'key': 'dxy', 'value': _latest('dxy'),
+        'slope_20d': dxy_slope, 'signal': dxy_signal,
+        'desc': f'DXY 20日斜率 {dxy_slope:+.2f}/日',
+        'theory': '美元急升對新興市場與資金流造成壓力',
+    })
+
+    # 5. 公債殖利率
+    us10y_vals = _get_closes('us10y')
+    us10y_slope = _slope_20d(us10y_vals)
+    if us10y_slope > 0.05:
+        us10y_signal = 'red'
+    elif us10y_slope > 0.02:
+        us10y_signal = 'yellow'
+    else:
+        us10y_signal = 'green'
+    signals.append({
+        'name': '公債殖利率', 'key': 'us10y', 'value': _latest('us10y'),
+        'slope_20d': us10y_slope, 'signal': us10y_signal,
+        'desc': f'US10Y 20日斜率 {us10y_slope:+.3f}/日',
+        'theory': '殖利率快速上升代表債券拋售、資金成本攀升',
+    })
+
+    # 6. 恐懼貪婪
+    fg_latest = _latest('fear_greed')
+    if fg_latest is not None:
+        if fg_latest < 25:
+            fg_signal = 'red'
+        elif fg_latest < 40:
+            fg_signal = 'yellow'
+        else:
+            fg_signal = 'green'
+    else:
+        fg_signal = 'gray'
+    signals.append({
+        'name': '恐懼貪婪', 'key': 'fear_greed', 'value': fg_latest,
+        'slope_20d': _slope_20d(_get_closes('fear_greed')),
+        'signal': fg_signal,
+        'desc': f'CNN Fear & Greed: {fg_latest}' if fg_latest else '無資料',
+        'theory': '極端恐懼往往伴隨市場超賣，但也可能繼續下跌',
+    })
+
+    # 7. 黃金避險
+    gold_vals = _get_closes('gold')
+    gold_slope = _slope_20d(gold_vals)
+    if gold_slope > 15:
+        gold_signal = 'red'
+    elif gold_slope > 5:
+        gold_signal = 'yellow'
+    else:
+        gold_signal = 'green'
+    signals.append({
+        'name': '黃金避險', 'key': 'gold', 'value': _latest('gold'),
+        'slope_20d': gold_slope, 'signal': gold_signal,
+        'desc': f'Gold 20日斜率 {gold_slope:+.1f}/日',
+        'theory': '金價急漲代表避險資金湧入，風險偏好降低',
+    })
+
+    # 8. 油價壓力
+    oil_vals = _get_closes('oil')
+    oil_slope = _slope_20d(oil_vals)
+    if oil_slope > 2:
+        oil_signal = 'red'
+    elif oil_slope > 0.5:
+        oil_signal = 'yellow'
+    else:
+        oil_signal = 'green'
+    signals.append({
+        'name': '油價壓力', 'key': 'oil', 'value': _latest('oil'),
+        'slope_20d': oil_slope, 'signal': oil_signal,
+        'desc': f'Oil 20日斜率 {oil_slope:+.2f}/日',
+        'theory': '油價急漲推升通膨預期與企業成本壓力',
+    })
+
+    # Total score: red=2, yellow=1, max=16 -> scale to 0-10
+    raw_score = sum(2 if s['signal'] == 'red' else 1 if s['signal'] == 'yellow' else 0 for s in signals)
+    score = round(raw_score / 16 * 10, 1)
+    if score >= 7:
+        level = 'high'
+    elif score >= 4:
+        level = 'medium'
+    else:
+        level = 'low'
+
+    n_red = sum(1 for s in signals if s['signal'] == 'red')
+    n_yellow = sum(1 for s in signals if s['signal'] == 'yellow')
+    n_green = sum(1 for s in signals if s['signal'] == 'green')
+    print(f"      Score: {score}/10 ({level}) | Red:{n_red} Yellow:{n_yellow} Green:{n_green}")
+
+    # Build sparkline history (last 30 days for each key)
+    spark_history = {}
+    for key in ['vix', 'dxy', 'oil', 'gold', 'us10y', 'fear_greed']:
+        data = history.get(key, [])[-30:]
+        spark_history[key] = data
+
+    # Add ratio sparklines
+    spark_history['spy_jpy'] = spy_jpy[-30:] if spy_jpy else []
+    spark_history['hyg_tlt'] = hyg_tlt[-30:] if hyg_tlt else []
+
+    return {
+        'score': score,
+        'max_score': 10,
+        'level': level,
+        'n_red': n_red,
+        'n_yellow': n_yellow,
+        'n_green': n_green,
+        'signals': signals,
+        'history': spark_history,
+        'updated_at': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+    }
+
+
+# ═══════════════════════════════════════
 # Main
 # ═══════════════════════════════════════
 
@@ -1414,6 +1723,14 @@ def main():
         print(f"  [J] ERROR: {e}")
         strategy['strategy_0050'] = {"potential_in": [], "potential_out": []}
         strategy['market_weight_top150'] = {"stocks": []}
+
+    # ── K. Risk Signals ──
+    try:
+        indices_hist = fetch_indices_history()
+        strategy['risk_signals'] = calc_risk_signals(indices_hist)
+    except Exception as e:
+        print(f"  [K] ERROR: {e}")
+        strategy['risk_signals'] = {"score": 0, "signals": [], "history": {}}
 
     # ── A. Signal Backtest (last, because it fetches from API) ──
     try:
