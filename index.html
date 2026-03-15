@@ -998,12 +998,18 @@
             <!-- Market Indices: Taiwan -->
             <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-bottom:1rem;">
                 <div class="kpi-card" style="padding:1.25rem 1.5rem; border-left:3px solid var(--accent);">
-                    <div class="kpi-label">加權指數 TAIEX</div>
+                    <div class="kpi-label" style="display:flex; align-items:center; gap:0.4rem;">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#4f8ef7" stroke-width="2"><path d="M3 17l6-6 4 4 8-8"/><path d="M17 7h4v4"/></svg>
+                        加權指數 TAIEX
+                    </div>
                     <div class="kpi-value" style="font-size:1.8rem;" id="p2-idx-taiex">-</div>
                     <div class="kpi-subtext" id="p2-idx-taiex-sub">-</div>
                 </div>
                 <div class="kpi-card" style="padding:1.25rem 1.5rem; border-left:3px solid var(--accent);">
-                    <div class="kpi-label">櫃買指數 TPEX</div>
+                    <div class="kpi-label" style="display:flex; align-items:center; gap:0.4rem;">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#4f8ef7" stroke-width="2"><path d="M3 17l6-6 4 4 8-8"/><path d="M17 7h4v4"/></svg>
+                        櫃買指數 TPEX
+                    </div>
                     <div class="kpi-value" style="font-size:1.8rem;" id="p2-idx-tpex">-</div>
                     <div class="kpi-subtext" id="p2-idx-tpex-sub">-</div>
                 </div>
@@ -1012,16 +1018,25 @@
             <!-- Sentiment Row -->
             <div id="p2-sentiment-grid" style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:1rem; margin-bottom:1.25rem;">
                 <div id="p2-vixtwn-card" class="kpi-card" style="text-align:center; padding:1rem; display:none;">
+                    <div style="margin-bottom:0.3rem;">
+                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#ff6b6b" stroke-width="1.5"><path d="M2 12c0 5.5 4.5 10 10 10s10-4.5 10-10S17.5 2 12 2 2 6.5 2 12z"/><path d="M8 9l2 2 4-4"/><path d="M8 15h8" stroke-dasharray="2 2"/></svg>
+                    </div>
                     <div class="kpi-label" style="font-size:0.75rem;">VIX 台灣</div>
                     <div class="kpi-value" id="p2-idx-vixtwn">-</div>
                     <div class="kpi-subtext" id="p2-idx-vixtwn-sub">-</div>
                 </div>
                 <div class="kpi-card" style="text-align:center; padding:1rem;">
+                    <div style="margin-bottom:0.3rem;">
+                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#ff6b6b" stroke-width="1.5"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+                    </div>
                     <div class="kpi-label" style="font-size:0.75rem;">VIX S&P500</div>
                     <div class="kpi-value" id="p2-idx-vix">-</div>
                     <div class="kpi-subtext" id="p2-idx-vix-sub">-</div>
                 </div>
                 <div class="kpi-card" style="text-align:center; padding:1rem;">
+                    <div style="margin-bottom:0.3rem;">
+                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#ffa500" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/><path d="M8 14s1.5 2 4 2 4-2 4-2" stroke-linecap="round"/></svg>
+                    </div>
                     <div class="kpi-label" style="font-size:0.75rem;">CNN 恐懼與貪婪</div>
                     <div class="kpi-value" id="p2-idx-feargreed">-</div>
                     <div class="kpi-subtext" id="p2-idx-feargreed-sub">-</div>
@@ -1036,7 +1051,10 @@
                 </div>
                 <div style="display:grid; grid-template-columns:repeat(4, 1fr); gap:0;">
                     <div style="padding:1rem 1.25rem; border-right:1px solid var(--border);">
-                        <div style="font-size:0.7rem; color:var(--text-muted); margin-bottom:0.4rem; text-transform:uppercase; letter-spacing:0.05em;">DXY 美元指數</div>
+                        <div style="display:flex; align-items:center; gap:0.4rem; margin-bottom:0.4rem;">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#4f8ef7" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M12 6v12M8 10l4-4 4 4M8 14h8"/></svg>
+                            <span style="font-size:0.7rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.05em;">DXY 美元指數</span>
+                        </div>
                         <div style="display:flex; align-items:baseline; gap:0.5rem;">
                             <span style="font-size:1.4rem; font-weight:700;" id="p2-idx-dxy">-</span>
                             <span style="font-size:0.8rem; font-weight:500;" id="p2-idx-dxy-sub">-</span>
@@ -1044,7 +1062,10 @@
                         <div style="font-size:0.65rem; color:var(--text-muted); margin-top:0.3rem;">看資金流向</div>
                     </div>
                     <div style="padding:1rem 1.25rem; border-right:1px solid var(--border);">
-                        <div style="font-size:0.7rem; color:var(--text-muted); margin-bottom:0.4rem; text-transform:uppercase; letter-spacing:0.05em;">WTI 原油</div>
+                        <div style="display:flex; align-items:center; gap:0.4rem; margin-bottom:0.4rem;">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#f97316" stroke-width="1.5"><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10S17.5 2 12 2z"/><path d="M12 6v4l3 3"/><circle cx="12" cy="12" r="2" fill="#f97316"/></svg>
+                            <span style="font-size:0.7rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.05em;">WTI 原油</span>
+                        </div>
                         <div style="display:flex; align-items:baseline; gap:0.5rem;">
                             <span style="font-size:1.4rem; font-weight:700;" id="p2-idx-oil">-</span>
                             <span style="font-size:0.8rem; font-weight:500;" id="p2-idx-oil-sub">-</span>
@@ -1052,7 +1073,10 @@
                         <div style="font-size:0.65rem; color:var(--text-muted); margin-top:0.3rem;">看經濟成本</div>
                     </div>
                     <div style="padding:1rem 1.25rem; border-right:1px solid var(--border);">
-                        <div style="font-size:0.7rem; color:var(--text-muted); margin-bottom:0.4rem; text-transform:uppercase; letter-spacing:0.05em;">黃金 GOLD</div>
+                        <div style="display:flex; align-items:center; gap:0.4rem; margin-bottom:0.4rem;">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#eab308" stroke-width="1.5"><path d="M12 2l3 7h7l-5.5 4.5 2 7L12 16l-6.5 4.5 2-7L2 9h7z"/></svg>
+                            <span style="font-size:0.7rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.05em;">黃金 GOLD</span>
+                        </div>
                         <div style="display:flex; align-items:baseline; gap:0.5rem;">
                             <span style="font-size:1.4rem; font-weight:700;" id="p2-idx-gold">-</span>
                             <span style="font-size:0.8rem; font-weight:500;" id="p2-idx-gold-sub">-</span>
@@ -1060,7 +1084,10 @@
                         <div style="font-size:0.65rem; color:var(--text-muted); margin-top:0.3rem;">看避險需求</div>
                     </div>
                     <div style="padding:1rem 1.25rem;">
-                        <div style="font-size:0.7rem; color:var(--text-muted); margin-bottom:0.4rem; text-transform:uppercase; letter-spacing:0.05em;">US 10Y 殖利率</div>
+                        <div style="display:flex; align-items:center; gap:0.4rem; margin-bottom:0.4rem;">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#00c48c" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 15l5-5 4 4 5-5 4 4"/></svg>
+                            <span style="font-size:0.7rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.05em;">US 10Y 殖利率</span>
+                        </div>
                         <div style="display:flex; align-items:baseline; gap:0.5rem;">
                             <span style="font-size:1.4rem; font-weight:700;" id="p2-idx-us10y">-</span>
                             <span style="font-size:0.8rem; font-weight:500;" id="p2-idx-us10y-sub">-</span>
