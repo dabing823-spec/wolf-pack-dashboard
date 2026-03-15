@@ -1285,7 +1285,7 @@
         <nav>
             <button class="nav-btn active" data-page="p2">🎯 戰略儀表板</button>
             <button class="nav-btn" data-page="p8">🛡 風險訊號</button>
-            <button class="nav-btn" data-page="p1">📊 ETF 持股追蹤</button>
+            <button class="nav-btn" data-page="p1">📊 00981A 持股追蹤</button>
             <button class="nav-btn" data-page="p3">📋 老墨跟單策略</button>
             <button class="nav-btn" data-page="p5">🧠 策略分析 & 回測</button>
             <button class="nav-btn" data-page="p4">🔍 歷史回溯</button>
@@ -1300,7 +1300,7 @@
 
         <!-- Page 1: ETF 持股追蹤 -->
         <div class="page" id="p1">
-            <div class="page-title">📊 ETF 持股追蹤</div>
+            <div class="page-title">📊 00981A 持股追蹤</div>
 
             <!-- Page Intro -->
             <div class="intro-box accent">
@@ -1965,6 +1965,22 @@
             <!-- Section 1: 操作建議 TOP10 -->
             <div class="table-container">
                 <div class="table-title">🎯 操作建議 TOP10</div>
+                <details open style="margin-bottom:1rem; padding:0.8rem 1rem; background:rgba(79,142,247,0.04); border-radius:8px; border-left:2px solid var(--accent);">
+                    <summary style="cursor:pointer; font-weight:600; color:var(--text); font-size:1rem;">這個排行怎麼選出來的？</summary>
+                    <div style="margin-top:0.6rem; font-size:0.95rem; color:var(--text-muted); line-height:1.9;">
+                        從 5 檔主動式 ETF 的持股中，用 <strong style="color:var(--text);">4 個因子加總評分</strong>，分數越高越值得關注：
+                        <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.5rem 1.5rem; margin:0.6rem 0;">
+                            <div><span style="color:var(--accent); font-weight:600;">共識 (0~5分)</span> 幾檔 ETF 同時持有。5 檔都有 = 滿分。</div>
+                            <div><span style="color:var(--purple); font-weight:600;">信念 (0~3分)</span> 經理人連續加碼天數越長，分數越高。</div>
+                            <div><span style="color:var(--green); font-weight:600;">速度 (0~3分)</span> 權重加碼的加速度。越來越快 = 高分。</div>
+                            <div><span style="color:var(--orange); font-weight:600;">現金 (0~1分)</span> 攻防模式為進攻時 +1（經理人看多加分）。</div>
+                        </div>
+                        <strong style="color:var(--text);">建議分級：</strong>
+                        <span style="background:rgba(255,71,87,0.85);color:#fff;padding:2px 8px;border-radius:4px;margin:0 3px;">強力買進</span> 8分+
+                        <span style="background:rgba(255,165,2,0.85);color:#fff;padding:2px 8px;border-radius:4px;margin:0 3px;">買進</span> 5~7分
+                        <span style="background:rgba(100,105,120,0.7);color:#e4e6eb;padding:2px 8px;border-radius:4px;margin:0 3px;">觀望</span> 2~4分
+                    </div>
+                </details>
                 <div class="table-scroll">
                     <table id="p5-recommendations-table">
                         <thead>
@@ -1986,6 +2002,23 @@
             <!-- Section 2: 信號回測績效 -->
             <div class="table-container">
                 <div class="table-title">📈 信號回測績效</div>
+                <details style="margin-bottom:1rem; padding:0.8rem 1rem; background:rgba(0,196,140,0.04); border-radius:8px; border-left:2px solid var(--green);">
+                    <summary style="cursor:pointer; font-weight:600; color:var(--text); font-size:1rem;">這些數字怎麼看？怎麼用？</summary>
+                    <div style="margin-top:0.6rem; font-size:0.95rem; color:var(--text-muted); line-height:1.9;">
+                        <strong style="color:var(--text);">什麼是「信號」？</strong><br>
+                        每當 00981A 經理人新增或加碼一檔股票，就產生一個「信號」。我們追蹤這個信號發出後，股票在 10 天和 20 天後漲了還是跌了。
+                        <br><br>
+                        <strong style="color:var(--text);">怎麼看勝率？</strong><br>
+                        <span style="color:var(--green);">10 日勝率 58%</span> = 經理人加碼的股票，10 個交易日後有 58% 的機率是上漲的。<br>
+                        <span style="color:var(--green);">20 日勝率 66%</span> = 持有 20 天勝率更高，代表經理人選股偏中線佈局。
+                        <br><br>
+                        <strong style="color:var(--text);">實戰怎麼用？</strong><br>
+                        1. 勝率 > 55% → 值得跟單。勝率 > 65% → 強烈跟單。<br>
+                        2. 20 日勝率 > 10 日 → 適合持有久一點，不要追短。<br>
+                        3. 搭配「操作建議」一起看 → 高評分 + 高勝率 = 最強信號。<br>
+                        4. 下方表格可以看每個信號的實際報酬，辨別哪種類型最賺。
+                    </div>
+                </details>
                 <div class="kpi-grid" id="p5-backtest-kpis"></div>
                 <div class="charts-row">
                     <div class="chart-container">
@@ -2431,10 +2464,10 @@
         <div class="page" id="p10">
             <div class="page-title">📰 新聞解構</div>
             <div class="risk-intro">巨人傑三層分析框架：Layer 1（表面資訊）→ Layer 2（隱藏資訊）→ Layer 3（系統決策）。找出市場定價錯誤與行動方向。</div>
-            <div id="p10-tabs" class="filter-buttons"></div>
+            <div id="p10-tabs" class="filter-buttons" style="margin-bottom:1rem;"></div>
             <div id="p10-articles"></div>
             <div id="p10-empty" style="display:none;">
-                <div class="loading">尚無新聞分析資料。執行 news_analysis_agent.py 後重新整理。</div>
+                <div class="loading">尚無新聞分析資料。執行 market_brief_agent.py 後重新整理。</div>
             </div>
         </div>
 
@@ -4894,7 +4927,7 @@
                                  r.recommendation === '買進' ? 'background:rgba(255,165,2,0.85);color:#fff;' :
                                  r.recommendation === '觀望' ? 'background:rgba(100,105,120,0.7);color:#e4e6eb;' :
                                  'background:rgba(0,196,140,0.85);color:#fff;';
-                return `<tr>
+                return `<tr style="cursor:pointer;" onmouseenter="document.getElementById('p5-fac-${r.code}')?.style.setProperty('border-color','var(--accent)')" onmouseleave="document.getElementById('p5-fac-${r.code}')?.style.setProperty('border-color','var(--border)')" onclick="document.getElementById('p5-fac-${r.code}')?.scrollIntoView({behavior:'smooth',block:'center'})">
                     <td class="text-center">${i + 1}</td>
                     <td>${r.code}</td>
                     <td>${r.name}</td>
@@ -4904,27 +4937,31 @@
                 </tr>`;
             }).join('');
 
-            // Factor breakdown
+            // Factor breakdown with explanations
             const factorDiv = document.getElementById('p5-factor-breakdown');
-            factorDiv.innerHTML = '<div style="font-size: 1.05rem; color:var(--text-muted); margin-bottom:0.75rem;">因子分解</div>' +
+            factorDiv.innerHTML = '<div style="font-size: 1.05rem; color:var(--text-muted); margin-bottom:0.25rem;">因子分解 — 每檔股票的評分來源</div>' +
+                '<div style="font-size: 0.88rem; color:var(--text-muted); margin-bottom:0.75rem;">長條越長代表該因子貢獻越大。點擊上方表格的股票可以快速找到對應卡片。</div>' +
                 '<div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap:0.75rem;">' +
                 top10.map(r => {
                     const f = r.factors || {};
                     const factors = [
-                        { name: '共識', val: f.consensus || 0, color: 'var(--accent)' },
-                        { name: '信念', val: f.conviction || 0, color: 'var(--purple)' },
-                        { name: '速度', val: f.velocity || 0, color: 'var(--green)' },
-                        { name: '現金', val: f.cash_mode || 0, color: 'var(--orange)' }
+                        { name: '共識', val: f.consensus || 0, color: 'var(--accent)', tip: `${f.consensus || 0}/5 檔 ETF 持有` },
+                        { name: '信念', val: f.conviction || 0, color: 'var(--purple)', tip: f.conviction >= 3 ? '連續大幅加碼' : f.conviction >= 2 ? '持續加碼中' : f.conviction >= 1 ? '小幅加碼' : '未加碼' },
+                        { name: '速度', val: f.velocity || 0, color: 'var(--green)', tip: f.velocity >= 2 ? '加碼加速中' : f.velocity >= 1 ? '穩定加碼' : '無明顯動能' },
+                        { name: '現金', val: f.cash_mode || 0, color: 'var(--orange)', tip: f.cash_mode >= 1 ? '進攻模式加分' : '非進攻模式' }
                     ];
                     const maxVal = Math.max(...factors.map(x => Math.abs(x.val)), 1);
-                    return `<div style="background:var(--card); border:1px solid var(--border); border-radius:8px; padding:0.75rem;">
-                        <div style="font-weight:600; font-size: 1rem; margin-bottom:0.5rem;">${r.code} ${r.name}</div>
-                        ${factors.map(fac => `<div style="display:flex; align-items:center; gap:0.5rem; margin-bottom:0.25rem;">
-                            <span style="font-size: 1.05rem; color:var(--text-muted); width:30px;">${fac.name}</span>
-                            <div style="flex:1; height:6px; background:var(--border); border-radius:3px; overflow:hidden;">
-                                <div style="height:100%; width:${Math.abs(fac.val) / maxVal * 100}%; background:${fac.color}; border-radius:3px;"></div>
+                    return `<div id="p5-fac-${r.code}" style="background:var(--card); border:1px solid var(--border); border-radius:8px; padding:0.75rem; transition:border-color 0.2s;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.5rem;">
+                            <span style="font-weight:600; font-size:1rem;">${r.code} ${r.name}</span>
+                            <span style="font-size:0.85rem; color:var(--accent); font-weight:600;">${r.score.toFixed(0)}分</span>
+                        </div>
+                        ${factors.map(fac => `<div style="display:flex; align-items:center; gap:0.5rem; margin-bottom:0.35rem;" title="${fac.tip}">
+                            <span style="font-size:0.95rem; color:${fac.color}; width:32px; font-weight:600;">${fac.name}</span>
+                            <div style="flex:1; height:8px; background:var(--border); border-radius:4px; overflow:hidden;">
+                                <div style="height:100%; width:${Math.abs(fac.val) / maxVal * 100}%; background:${fac.color}; border-radius:4px;"></div>
                             </div>
-                            <span style="font-size: 1.05rem; color:var(--text-muted); width:28px; text-align:right;">${fac.val.toFixed(1)}</span>
+                            <span style="font-size:0.88rem; color:var(--text-muted); min-width:85px; text-align:right;">${fac.val.toFixed(1)} ${fac.tip}</span>
                         </div>`).join('')}
                     </div>`;
                 }).join('') + '</div>';
@@ -5000,10 +5037,29 @@
                                 }
                             },
                             zoom: chartZoomConfig,
+                            annotation: {
+                                annotations: {
+                                    baseline50: {
+                                        type: 'line',
+                                        xMin: 50, xMax: 50,
+                                        borderColor: 'rgba(255,255,255,0.25)',
+                                        borderWidth: 2,
+                                        borderDash: [6, 4],
+                                        label: {
+                                            display: true,
+                                            content: '50% 基準',
+                                            position: 'start',
+                                            color: 'rgba(255,255,255,0.5)',
+                                            font: { size: 11 }
+                                        }
+                                    }
+                                }
+                            },
+                            datalabels: false,
                         },
                         scales: {
-                            x: { max: 100, grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#8b8fa3' } },
-                            y: { grid: { display: false }, ticks: { color: '#e4e6eb' } }
+                            x: { max: 100, grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#a0a5b8' } },
+                            y: { grid: { display: false }, ticks: { color: '#e4e6eb', font: { size: 14 } } }
                         }
                     }
                 });
@@ -5603,9 +5659,9 @@
                     <div class="news-field"><div class="news-field-label">定價程度</div><div class="news-field-value">${l2.pricing_status || '-'}</div></div>
                     <div class="news-field"><div class="news-field-label">真實動機</div><div class="news-field-value">${l2.real_motive || '-'}</div></div>
                 </div>
-                <div class="highlight" style="margin-top:0.85rem; background:rgba(255,165,2,0.08); border-left-color:var(--orange);">
-                    <div class="news-field-label" style="margin-bottom:0.25rem;">市場盲點</div>
-                    <div style="font-size: 1rem;line-height:1.6;">${l2.market_blind_spots || '-'}</div>
+                <div class="news-blindspot">
+                    <div class="news-field-label" style="margin-bottom:0.35rem;">市場盲點</div>
+                    <div style="font-size:1.15rem; line-height:1.75; color:var(--text);">${l2.market_blind_spots || '-'}</div>
                 </div>`;
         }
 
@@ -5627,16 +5683,12 @@
             const emptyEl = document.getElementById('p10-empty');
             const tabsEl = document.getElementById('p10-tabs');
             const artEl = document.getElementById('p10-articles');
-
             // Always fetch fresh data when visiting p10
             if (!newsAnalysisData) {
                 try {
                     const res = await fetch(`data/news_analysis.json?t=${Date.now()}`);
                     if (res.ok) {
                         newsAnalysisData = await res.json();
-                        console.log('p10: loaded news data,', newsAnalysisData.news_analyses?.length, 'articles');
-                    } else {
-                        console.warn('p10: fetch failed, status', res.status);
                     }
                 } catch (e) {
                     console.warn('p10: fetch error', e);
@@ -5653,13 +5705,14 @@
             }
             emptyEl.style.display = 'none';
 
-            // Tabs
+            // Category icons for tabs
+            const catIcons = {'央行政策':'🏛','經濟數據':'📊','財報發布':'📋','地緣政治':'🌐','半導體':'💎','市場動態':'📈','ETF 動態':'📦'};
             tabsEl.innerHTML = articles.map((a, i) => {
-                const label = a.date + ' ' + (a.headline || '').slice(0, 20);
-                return `<button class="filter-btn${i === 0 ? ' active' : ''}" onclick="switchNewsTab(${i})">${label}</button>`;
+                const icon = catIcons[a.category] || '📰';
+                const title = (a.headline || '').slice(0, 25);
+                return `<button class="filter-btn${i === 0 ? ' active' : ''}" onclick="switchNewsTab(${i})">${icon} ${title}</button>`;
             }).join('');
 
-            // Render first article
             switchNewsTab(0);
         }
 
@@ -5667,17 +5720,26 @@
             const articles = newsAnalysisData.news_analyses;
             if (!articles || !articles[idx]) return;
 
-            // Update tab active state
             document.querySelectorAll('#p10-tabs .filter-btn').forEach((btn, i) => {
                 btn.classList.toggle('active', i === idx);
             });
 
             const a = articles[idx];
             const catColor = a.category_color || 'blue';
+            // V1: Source link
+            const sourceLink = a.link
+                ? `<a href="${a.link}" target="_blank" rel="noopener" class="news-source-link">${a.source || '原文連結'} ↗</a>`
+                : (a.source ? `<span class="text-muted text-sm">${a.source}</span>` : '');
+
             document.getElementById('p10-articles').innerHTML = `
                 <div class="news-article-container">
                     <div class="news-header">
-                        <div><span class="badge badge-${catColor}">${a.category || ''}</span> <span class="text-muted text-xs">${a.date || ''}</span></div>
+                        <div style="display:flex; align-items:center; gap:0.6rem; flex-wrap:wrap;">
+                            <span class="badge badge-${catColor}">${a.category || ''}</span>
+                            <span class="text-muted" style="font-size:0.85rem;">${a.date || ''}</span>
+                            ${sourceLink}
+                            <span class="text-muted" style="font-size:0.75rem; margin-left:auto;">AI 分析 ${a.generated_at || ''}</span>
+                        </div>
                         <h2 class="news-headline">${a.headline || ''}</h2>
                     </div>
                     <details class="news-layer" open>
