@@ -1765,6 +1765,19 @@
                 核心理論：<strong>VIX 斜率</strong>比絕對值重要、<strong>SPY/JPY</strong> 套利平倉是最強領先指標、<strong>HYG/TLT</strong> 反映流動性枯竭速度。
             </div>
 
+            <!-- Agent Pipeline Status -->
+            <div id="p8-agent-panel" style="display:none; margin-bottom:1.25rem;">
+                <details>
+                    <summary style="cursor:pointer;font-size:0.8rem;color:var(--text-muted);padding:0.5rem 0;">Agent Pipeline 狀態</summary>
+                    <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:0.75rem; margin-top:0.5rem;">
+                        <div id="p8-agent-data" class="kpi-card" style="padding:0.75rem 1rem;"></div>
+                        <div id="p8-agent-validator" class="kpi-card" style="padding:0.75rem 1rem;"></div>
+                        <div id="p8-agent-signal" class="kpi-card" style="padding:0.75rem 1rem;"></div>
+                    </div>
+                    <div id="p8-agent-warnings" style="margin-top:0.5rem;"></div>
+                </details>
+            </div>
+
             <!-- Score -->
             <div style="display:flex; align-items:center; gap:2rem; margin-bottom:2rem; padding:1.5rem; background:var(--card); border-radius:12px; border:1px solid var(--border);">
                 <div id="p8-score-ring" style="position:relative; width:140px; height:140px; flex-shrink:0;">
@@ -4431,8 +4444,65 @@
                 document.getElementById('p8-score-label').textContent = '暫無資料';
                 return;
             }
+            renderP8AgentPanel();
             renderP8Score(rs);
             renderP8Signals(rs);
+        }
+
+        function renderP8AgentPanel() {
+            const as = strategyData && strategyData.agent_status;
+            const panel = document.getElementById('p8-agent-panel');
+            if (!as) return;
+            panel.style.display = 'block';
+
+            function _icon(status) {
+                if (status === 'OK') return '<span style="color:var(--green);">OK</span>';
+                if (status === 'WARN') return '<span style="color:var(--orange);">WARN</span>';
+                return '<span style="color:var(--red);">ERR</span>';
+            }
+            function _dur(ms) {
+                return ms >= 1000 ? (ms / 1000).toFixed(1) + 's' : ms + 'ms';
+            }
+
+            // Data Agent
+            const da = as.data_agent || {};
+            const daStats = da.stats || {};
+            document.getElementById('p8-agent-data').innerHTML = `
+                <div style="font-size:0.7rem;color:var(--text-muted);margin-bottom:0.3rem;">Data Agent</div>
+                <div style="font-size:1rem;font-weight:600;">${_icon(da.status)} <span style="color:var(--text-muted);font-weight:400;font-size:0.8rem;">${_dur(da.duration_ms || 0)}</span></div>
+                <div style="font-size:0.72rem;color:var(--text-muted);margin-top:0.3rem;">
+                    ${daStats.indices_symbols || 0} symbols &middot;
+                    ${daStats.indices_min_days || 0} days &middot;
+                    ${daStats.rankings_count || 0} rankings &middot;
+                    ${daStats.holdings_0050_count || 0} holdings
+                </div>`;
+
+            // Validator Agent
+            const va = as.validator_agent || {};
+            document.getElementById('p8-agent-validator').innerHTML = `
+                <div style="font-size:0.7rem;color:var(--text-muted);margin-bottom:0.3rem;">Validator Agent</div>
+                <div style="font-size:1rem;font-weight:600;">${_icon(va.status)} <span style="color:var(--text-muted);font-weight:400;font-size:0.8rem;">${_dur(va.duration_ms || 0)}</span></div>
+                <div style="font-size:0.72rem;color:var(--text-muted);margin-top:0.3rem;">
+                    ${va.checks_passed || 0}/${va.checks_total || 0} checks passed &middot;
+                    ${(va.warnings || []).length} warnings
+                </div>`;
+
+            // Signal Agent
+            const sa = as.signal_agent || {};
+            document.getElementById('p8-agent-signal').innerHTML = `
+                <div style="font-size:0.7rem;color:var(--text-muted);margin-bottom:0.3rem;">Signal Agent</div>
+                <div style="font-size:1rem;font-weight:600;">${_icon(sa.status)} <span style="color:var(--text-muted);font-weight:400;font-size:0.8rem;">${_dur(sa.duration_ms || 0)}</span></div>
+                <div style="font-size:0.72rem;color:var(--text-muted);margin-top:0.3rem;">8 risk signals + 0050 + top150</div>`;
+
+            // Warnings list
+            const allWarnings = [...(da.warnings || []), ...(va.warnings || []), ...(sa.warnings || [])];
+            const warnDiv = document.getElementById('p8-agent-warnings');
+            if (allWarnings.length > 0) {
+                warnDiv.innerHTML = allWarnings.map(w => {
+                    const color = w.level === 'ERROR' ? 'var(--red)' : w.level === 'WARN' ? 'var(--orange)' : 'var(--text-muted)';
+                    return `<div style="font-size:0.75rem;color:${color};padding:2px 0;">${w.level}: ${w.msg}</div>`;
+                }).join('');
+            }
         }
 
         function renderP8Score(rs) {

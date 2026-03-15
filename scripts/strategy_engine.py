@@ -1784,23 +1784,77 @@ def main():
         print(f"  [MKT] ERROR: {e}")
         strategy['market_indices'] = {}
 
-    # ── J. 0050 Strategy + Market Weight Top 150 ──
+    # ══════════════════════════════════════════════
+    # Macro Agent Pipeline (Data → Validator → Signal)
+    # ══════════════════════════════════════════════
+    print()
+    print("━━━ Macro Agent Pipeline ━━━")
+    agent_status = {}
+
+    # Step 1: Data Agent
+    print("\n  [1/3] Data Agent")
     try:
-        s0050, mw150 = calc_0050_and_market_weight()
-        strategy['strategy_0050'] = s0050
-        strategy['market_weight_top150'] = mw150
+        sys.path.insert(0, str(Path(__file__).parent / 'agents'))
+        from macro_data_agent import run as run_data_agent
+        data_result = run_data_agent()
+        agent_status['data_agent'] = {
+            'status': data_result['status'],
+            'duration_ms': data_result['duration_ms'],
+            'stats': data_result.get('stats', {}),
+            'warnings': data_result.get('warnings', []),
+        }
     except Exception as e:
-        print(f"  [J] ERROR: {e}")
+        print(f"  Data Agent ERROR: {e}")
+        data_result = {'status': 'ERROR', 'data': {}, 'warnings': [{'level': 'ERROR', 'symbol': 'all', 'msg': str(e)}]}
+        agent_status['data_agent'] = {'status': 'ERROR', 'duration_ms': 0, 'warnings': data_result['warnings']}
+
+    # Step 2: Validator Agent
+    print("\n  [2/3] Validator Agent")
+    try:
+        from macro_validator_agent import run as run_validator_agent
+        validator_result = run_validator_agent(data_result.get('data', {}))
+        agent_status['validator_agent'] = {
+            'status': validator_result['status'],
+            'duration_ms': validator_result['duration_ms'],
+            'checks_passed': validator_result.get('checks_passed', 0),
+            'checks_total': validator_result.get('checks_total', 0),
+            'warnings': validator_result.get('warnings', []),
+        }
+    except Exception as e:
+        print(f"  Validator Agent ERROR: {e}")
+        validator_result = {'status': 'ERROR', 'warnings': []}
+        agent_status['validator_agent'] = {'status': 'ERROR', 'duration_ms': 0, 'warnings': []}
+
+    # Step 3: Signal Agent
+    print("\n  [3/3] Signal Agent")
+    try:
+        from macro_signal_agent import run as run_signal_agent
+        signal_result = run_signal_agent(data_result.get('data', {}), validator_result)
+        agent_status['signal_agent'] = {
+            'status': signal_result['status'],
+            'duration_ms': signal_result['duration_ms'],
+        }
+        strategy['risk_signals'] = signal_result.get('risk_signals', {})
+        strategy['strategy_0050'] = signal_result.get('strategy_0050', {'potential_in': [], 'potential_out': []})
+        strategy['market_weight_top150'] = signal_result.get('market_weight_top150', {'stocks': []})
+    except Exception as e:
+        print(f"  Signal Agent ERROR: {e}")
+        agent_status['signal_agent'] = {'status': 'ERROR', 'duration_ms': 0}
+        strategy['risk_signals'] = {"score": 0, "signals": [], "history": {}}
         strategy['strategy_0050'] = {"potential_in": [], "potential_out": []}
         strategy['market_weight_top150'] = {"stocks": []}
 
-    # ── K. Risk Signals ──
-    try:
-        indices_hist = fetch_indices_history()
-        strategy['risk_signals'] = calc_risk_signals(indices_hist)
-    except Exception as e:
-        print(f"  [K] ERROR: {e}")
-        strategy['risk_signals'] = {"score": 0, "signals": [], "history": {}}
+    strategy['agent_status'] = agent_status
+
+    # Pipeline summary
+    print("\n━━━ Agent Pipeline Summary ━━━")
+    for name, info in agent_status.items():
+        icon = "OK" if info['status'] == 'OK' else "WARN" if info['status'] == 'WARN' else "ERR"
+        dur = info.get('duration_ms', 0)
+        print(f"  [{icon}] {name}: {dur}ms")
+        for w in info.get('warnings', []):
+            print(f"       {w['level']}: {w['msg']}")
+    print()
 
     # ── A. Signal Backtest (last, because it fetches from API) ──
     try:
