@@ -2437,13 +2437,34 @@
                 基於 NotebookLM 的 AI 研究助手。可以針對 ETF 持股、策略分析、市場觀察等問題進行互動式問答。資料來源為每日更新的持股報告與研究分析。
             </div>
 
-            <div style="background:var(--card); border:1px solid var(--border); border-radius:16px; overflow:hidden; height:calc(100vh - 220px); min-height:500px;">
-                <iframe
-                    src="https://notebooklm.google.com/notebook/9bec166a-94f4-45cc-8ef7-59520e8ee192"
-                    style="width:100%; height:100%; border:none;"
-                    allow="clipboard-write"
-                    loading="lazy"
-                ></iframe>
+            <div style="background:linear-gradient(135deg, rgba(26,29,40,0.95), rgba(30,34,52,0.95)); border:1px solid rgba(79,142,247,0.15); border-radius:16px; padding:3rem 2rem; text-align:center;">
+                <div style="font-size:3.5rem; margin-bottom:1rem;">🤖</div>
+                <div style="font-size:1.3rem; font-weight:700; color:var(--text); margin-bottom:0.5rem;">NotebookLM AI 研究助手</div>
+                <div style="font-size:0.85rem; color:var(--text-muted); max-width:500px; margin:0 auto 2rem; line-height:1.8;">
+                    針對 ETF 持股變化、經理人操作策略、市場趨勢等問題進行互動式問答。<br>
+                    資料來源為每日更新的持股報告與研究分析。
+                </div>
+                <a href="https://notebooklm.google.com/notebook/9bec166a-94f4-45cc-8ef7-59520e8ee192"
+                   target="_blank" rel="noopener"
+                   style="display:inline-block; padding:0.85rem 2.5rem; background:linear-gradient(135deg, var(--accent), #3b7ddb); color:white; text-decoration:none; border-radius:12px; font-weight:600; font-size:0.95rem; transition:all 0.3s; box-shadow:0 4px 16px rgba(79,142,247,0.3);"
+                   onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 8px 24px rgba(79,142,247,0.4)'"
+                   onmouseout="this.style.transform='';this.style.boxShadow='0 4px 16px rgba(79,142,247,0.3)'">
+                    開啟 AI 問答
+                </a>
+                <div style="margin-top:2.5rem; display:grid; grid-template-columns:repeat(3,1fr); gap:1rem; max-width:600px; margin-left:auto; margin-right:auto;">
+                    <div style="background:rgba(255,255,255,0.03); border-radius:10px; padding:1rem;">
+                        <div style="font-size:0.75rem; color:var(--text-muted); margin-bottom:0.3rem;">可以問</div>
+                        <div style="font-size:0.8rem; color:var(--text);">00981A 最近為什麼加碼台積電？</div>
+                    </div>
+                    <div style="background:rgba(255,255,255,0.03); border-radius:10px; padding:1rem;">
+                        <div style="font-size:0.75rem; color:var(--text-muted); margin-bottom:0.3rem;">可以問</div>
+                        <div style="font-size:0.8rem; color:var(--text);">五檔 ETF 的共識標的有哪些？</div>
+                    </div>
+                    <div style="background:rgba(255,255,255,0.03); border-radius:10px; padding:1rem;">
+                        <div style="font-size:0.75rem; color:var(--text-muted); margin-bottom:0.3rem;">可以問</div>
+                        <div style="font-size:0.8rem; color:var(--text);">現在的現金水位代表什麼？</div>
+                    </div>
+                </div>
             </div>
         </div>
 
