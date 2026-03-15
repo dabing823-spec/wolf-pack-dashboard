@@ -4,6 +4,18 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>JOY88 主動式 ETF 追蹤儀表板 v2.0</title>
+    <meta name="description" content="台股主動式 ETF 追蹤儀表板 - 持股異動、風險訊號、0050 策略分析">
+    <meta property="og:title" content="JOY88 主動式 ETF 追蹤儀表板">
+    <meta property="og:description" content="追蹤 5 檔主動式 ETF 持股變化、8 個宏觀風險訊號、0050 納入/剔除策略">
+    <meta property="og:type" content="website">
+    <!-- Google Analytics 4 -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'G-XXXXXXXXXX');
+    </script>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📊</text></svg>">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.1" integrity="sha384-jb8JQMbMoBUzgWatfe6COACi2ljcDdZQ2OxczGA3bGNeWe+6DChMTBJemed7ZnvJ" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/hammerjs@2.0.8"></script>
@@ -2470,6 +2482,77 @@
 
     </div>
 
+    <!-- Footer -->
+    <footer style="max-width:1600px;margin:0 auto;padding:1rem 2rem 2rem;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.5rem;font-size:0.75rem;color:var(--text-muted);">
+        <div>JOY88 ETF Dashboard &copy; 2025-2026. 資料來源：TWSE、TAIFEX、MoneyDJ、Yahoo Finance、CNN。</div>
+        <div style="display:flex;gap:1rem;">
+            <a href="#" onclick="document.getElementById('disclaimer-modal').style.display='block';return false;" style="color:var(--text-muted);text-decoration:none;">免責聲明</a>
+            <a href="#" onclick="document.getElementById('privacy-modal').style.display='block';return false;" style="color:var(--text-muted);text-decoration:none;">隱私政策</a>
+            <a href="#" onclick="document.getElementById('terms-modal').style.display='block';return false;" style="color:var(--text-muted);text-decoration:none;">服務條款</a>
+        </div>
+    </footer>
+
+    <!-- Disclaimer Modal -->
+    <div id="disclaimer-modal" class="risk-modal-overlay" onclick="if(event.target===this)this.style.display='none'">
+        <div class="risk-modal-content" style="max-width:640px;">
+            <button class="risk-modal-close" onclick="this.parentElement.parentElement.style.display='none'">&times;</button>
+            <h2 style="font-size:1.25rem;font-weight:700;margin-bottom:1rem;color:var(--text);">免責聲明</h2>
+            <div style="font-size:0.85rem;color:var(--text-secondary);line-height:1.9;">
+                <p><strong>1. 非投資建議</strong><br>
+                本網站所提供之所有資訊、數據、分析及訊號，僅供參考之用，不構成任何形式之投資建議、推薦或要約。使用者不應僅依據本網站之內容作為投資決策之唯一依據。</p>
+                <p><strong>2. 資料準確性</strong><br>
+                本網站之資料來源包括但不限於台灣證券交易所 (TWSE)、期貨交易所 (TAIFEX)、MoneyDJ、Yahoo Finance 及 CNN。儘管我們盡力確保資料之準確性與即時性，但不保證資料無誤、完整或即時。資料可能因來源端之延遲、錯誤或中斷而產生偏差。</p>
+                <p><strong>3. 風險警告</strong><br>
+                投資涉及風險，過去之績效不代表未來之表現。本網站所展示之風險訊號、策略分析及回測結果均基於歷史數據，不保證未來能產生相同之結果。使用者應自行評估投資風險，並於必要時諮詢專業之財務顧問。</p>
+                <p><strong>4. 模型限制</strong><br>
+                本網站使用之量化模型（包括但不限於 VIX 斜率分析、SPY/JPY 套利平倉指標、HYG/TLT 流動性指標等）均有其統計上之限制。模型可能因市場環境變遷 (Regime Shift) 而失效，且過去有效之指標未必能於未來維持相同之預測能力。</p>
+                <p><strong>5. 責任限制</strong><br>
+                本網站之經營者、開發者及關聯方對使用者因使用或依賴本網站資訊而產生之任何直接或間接損失，概不負責。</p>
+                <p style="color:var(--text-muted);margin-top:1rem;font-size:0.78rem;">最後更新：2026 年 3 月</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Privacy Modal -->
+    <div id="privacy-modal" class="risk-modal-overlay" onclick="if(event.target===this)this.style.display='none'">
+        <div class="risk-modal-content" style="max-width:640px;">
+            <button class="risk-modal-close" onclick="this.parentElement.parentElement.style.display='none'">&times;</button>
+            <h2 style="font-size:1.25rem;font-weight:700;margin-bottom:1rem;color:var(--text);">隱私政策</h2>
+            <div style="font-size:0.85rem;color:var(--text-secondary);line-height:1.9;">
+                <p><strong>1. 資料收集</strong><br>
+                本網站使用 Google Analytics 4 收集匿名之使用統計資料，包括但不限於頁面瀏覽量、停留時間、裝置類型及地理位置（國家層級）。我們不會收集可識別個人身份之資訊。</p>
+                <p><strong>2. Cookie</strong><br>
+                本網站透過 Google Analytics 使用 Cookie 來改善使用體驗。使用者可透過瀏覽器設定停用 Cookie。</p>
+                <p><strong>3. 第三方服務</strong><br>
+                本網站之資料來源為第三方金融資料提供者。我們不會將使用者之瀏覽行為資料分享予任何第三方（Google Analytics 之匿名統計除外）。</p>
+                <p><strong>4. 資料安全</strong><br>
+                本網站為靜態網站，託管於 GitHub Pages，不儲存任何使用者之個人資料或登入憑證。</p>
+                <p style="color:var(--text-muted);margin-top:1rem;font-size:0.78rem;">最後更新：2026 年 3 月</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Terms Modal -->
+    <div id="terms-modal" class="risk-modal-overlay" onclick="if(event.target===this)this.style.display='none'">
+        <div class="risk-modal-content" style="max-width:640px;">
+            <button class="risk-modal-close" onclick="this.parentElement.parentElement.style.display='none'">&times;</button>
+            <h2 style="font-size:1.25rem;font-weight:700;margin-bottom:1rem;color:var(--text);">服務條款</h2>
+            <div style="font-size:0.85rem;color:var(--text-secondary);line-height:1.9;">
+                <p><strong>1. 服務範圍</strong><br>
+                JOY88 ETF Dashboard 提供台股主動式 ETF 持股追蹤、宏觀風險訊號分析及市值策略工具。本服務之內容可能隨時調整或更新，恕不另行通知。</p>
+                <p><strong>2. 使用限制</strong><br>
+                使用者不得將本網站之資料、分析結果或訊號用於商業性再發布、轉售或提供予第三方之付費服務，除非事先取得書面授權。</p>
+                <p><strong>3. 智慧財產權</strong><br>
+                本網站之設計、程式碼、分析邏輯及內容（包括但不限於風險訊號模型、吃豆腐戰法 SOP）均受智慧財產權保護。</p>
+                <p><strong>4. 服務可用性</strong><br>
+                本網站依「現況」(as-is) 提供，不保證服務之持續可用性。資料更新頻率為每個交易日一次，可能因技術問題而延遲。</p>
+                <p><strong>5. 條款修改</strong><br>
+                本服務條款可能隨時修改。繼續使用本網站即表示同意修改後之條款。</p>
+                <p style="color:var(--text-muted);margin-top:1rem;font-size:0.78rem;">最後更新：2026 年 3 月</p>
+            </div>
+        </div>
+    </div>
+
     <script>
         // ============================================================================
         // Global State and Data
@@ -2557,6 +2640,10 @@
         // Navigation
         // ============================================================================
         function switchPage(pageId) {
+            // GA4 tracking
+            if (typeof gtag === 'function') {
+                gtag('event', 'page_view', { page_title: pageId });
+            }
             // Hide all pages
             document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
             document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
@@ -5333,6 +5420,9 @@
         }
 
         function _p8ShowDetail(key) {
+            if (typeof gtag === 'function') {
+                gtag('event', 'signal_detail_view', { signal_key: key });
+            }
             const rs = strategyData && strategyData.risk_signals;
             if (!rs) return;
             const sig = rs.signals.find(s => s.key === key);
