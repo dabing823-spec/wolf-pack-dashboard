@@ -984,13 +984,14 @@ def fetch_market_indices_live():
 
     print("  [MKT] Fetching market indices...")
 
-    # ── Yahoo Finance symbols ──
+    # ── Yahoo Finance symbols (all with change data) ──
     yahoo_symbols = {
-        'vix':   {'symbol': '%5EVIX',   'label': 'VIX S&P500'},
-        'dxy':   {'symbol': 'DX-Y.NYB', 'label': 'DXY 美元指數'},
-        'oil':   {'symbol': 'CL%3DF',   'label': 'WTI 原油'},
-        'gold':  {'symbol': 'GC%3DF',   'label': '黃金'},
-        'us10y': {'symbol': '%5ETNX',   'label': 'US 10Y 殖利率'},
+        'vix':    {'symbol': '%5EVIX',    'label': 'VIX S&P500'},
+        'vixtwn': {'symbol': '%5ETWVIX',  'label': 'VIX 台灣'},
+        'dxy':    {'symbol': 'DX-Y.NYB',  'label': 'DXY 美元指數'},
+        'oil':    {'symbol': 'CL%3DF',    'label': 'WTI 原油'},
+        'gold':   {'symbol': 'GC%3DF',    'label': '黃金'},
+        'us10y':  {'symbol': '%5ETNX',    'label': 'US 10Y 殖利率'},
     }
 
     for key, info in yahoo_symbols.items():
@@ -1003,21 +1004,22 @@ def fetch_market_indices_live():
                 result[f'{key}_chg_pct'] = chg_pct
             print(f"  [MKT] {info['label']}: {price}" + (f" ({chg:+.2f}, {chg_pct:+.2f}%)" if chg is not None else ""))
 
-    # ── VIXTWN (台灣 VIX) via TAIFEX ──
-    try:
-        r = requests.get('https://www.taifex.com.tw/cht/9/VIXQuote',
-                         headers={'User-Agent': headers['User-Agent']}, timeout=10)
-        if r.status_code == 200:
-            matches = re.findall(r'>(\d{1,3}\.\d{2})<', r.text)
-            if matches:
-                result['vixtwn'] = float(matches[0])
-                print(f"  [MKT] VIX 台灣: {result['vixtwn']}")
-            else:
-                print("  [MKT] VIXTWN: no data found on page")
-    except Exception as e:
-        print(f"  [MKT] VIXTWN fetch failed: {e}")
+    # ── VIXTWN fallback: TAIFEX website if Yahoo failed ──
+    if 'vixtwn' not in result:
+        try:
+            r = requests.get('https://www.taifex.com.tw/cht/9/VIXQuote',
+                             headers={'User-Agent': headers['User-Agent']}, timeout=10)
+            if r.status_code == 200:
+                matches = re.findall(r'>(\d{1,3}\.\d{2})<', r.text)
+                if matches:
+                    result['vixtwn'] = float(matches[0])
+                    print(f"  [MKT] VIX 台灣 (TAIFEX fallback): {result['vixtwn']}")
+                else:
+                    print("  [MKT] VIXTWN: no data found on page")
+        except Exception as e:
+            print(f"  [MKT] VIXTWN fallback failed: {e}")
 
-    # ── CNN Fear & Greed ──
+    # ── CNN Fear & Greed (with previous day change) ──
     try:
         cnn_headers = {**headers, 'Referer': 'https://edition.cnn.com/markets/fear-and-greed'}
         r = requests.get('https://production.dataviz.cnn.io/index/fearandgreed/graphdata',
@@ -1026,9 +1028,26 @@ def fetch_market_indices_live():
             data = r.json()
             fg = data.get('fear_and_greed', {})
             if fg.get('score') is not None:
-                result['fear_greed'] = round(fg['score'], 1)
+                score = round(fg['score'], 1)
+                result['fear_greed'] = score
                 result['fear_greed_rating'] = fg.get('rating', '')
-                print(f"  [MKT] CNN Fear & Greed: {result['fear_greed']} ({result['fear_greed_rating']})")
+                # Get previous close for change calculation
+                prev_close = fg.get('previous_close')
+                if prev_close is not None:
+                    prev_val = round(prev_close, 1)
+                    result['fear_greed_prev'] = prev_val
+                    result['fear_greed_chg'] = round(score - prev_val, 1)
+                    print(f"  [MKT] CNN Fear & Greed: {score} ({result['fear_greed_rating']}) chg={result['fear_greed_chg']:+.1f}")
+                else:
+                    # Try previous_1_week or timeline data
+                    prev_1d = data.get('fear_and_greed_historical', {}).get('data', [])
+                    if len(prev_1d) >= 2:
+                        prev_val = round(prev_1d[-2].get('y', prev_1d[-2].get('score', score)), 1)
+                        result['fear_greed_prev'] = prev_val
+                        result['fear_greed_chg'] = round(score - prev_val, 1)
+                        print(f"  [MKT] CNN Fear & Greed: {score} ({result['fear_greed_rating']}) chg={result['fear_greed_chg']:+.1f}")
+                    else:
+                        print(f"  [MKT] CNN Fear & Greed: {score} ({result['fear_greed_rating']})")
         else:
             print(f"  [MKT] CNN Fear & Greed: status {r.status_code}")
     except Exception as e:

@@ -1007,8 +1007,8 @@
             </div>
 
             <!-- Sentiment Row -->
-            <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:1rem; margin-bottom:1.25rem;">
-                <div class="kpi-card" style="text-align:center; padding:1rem;">
+            <div id="p2-sentiment-grid" style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:1rem; margin-bottom:1.25rem;">
+                <div id="p2-vixtwn-card" class="kpi-card" style="text-align:center; padding:1rem; display:none;">
                     <div class="kpi-label" style="font-size:0.75rem;">VIX 台灣</div>
                     <div class="kpi-value" id="p2-idx-vixtwn">-</div>
                     <div class="kpi-subtext" id="p2-idx-vixtwn-sub">-</div>
@@ -2541,7 +2541,7 @@
         // Page 2: 戰略儀表板
         // ============================================================================
 
-        async function renderMarketIndices() {
+        function renderMarketIndices() {
             // Taiwan color convention: red=漲, green=跌
             const UP_COLOR = 'var(--red)';
             const DOWN_COLOR = 'var(--green)';
@@ -2596,18 +2596,37 @@
             // VIX data from strategy.json (pre-fetched by backend)
             if (strategyData && strategyData.market_indices) {
                 const mi = strategyData.market_indices;
-                if (mi.vix != null) {
-                    document.getElementById('p2-idx-vix').textContent = mi.vix.toFixed(2);
-                    document.getElementById('p2-idx-vix').style.color = mi.vix >= 20 ? UP_COLOR : mi.vix >= 15 ? 'var(--orange)' : DOWN_COLOR;
-                    document.getElementById('p2-idx-vix-sub').textContent =
-                        `${mi.vix < 15 ? '低波動' : mi.vix < 20 ? '正常' : mi.vix < 30 ? '偏高' : '恐慌'}`;
+                // Helper: render VIX-type indicator with change
+                function renderVixCard(key, elId, label) {
+                    const val = mi[key];
+                    if (val == null) return;
+                    const el = document.getElementById(elId);
+                    const subEl = document.getElementById(elId + '-sub');
+                    el.textContent = val.toFixed(2);
+                    el.style.color = val >= 20 ? UP_COLOR : val >= 15 ? 'var(--orange)' : DOWN_COLOR;
+                    const level = val < 15 ? '低波動' : val < 20 ? '正常' : val < 30 ? '偏高' : '恐慌';
+                    const chg = mi[key + '_chg'];
+                    const pct = mi[key + '_chg_pct'];
+                    if (chg != null) {
+                        subEl.textContent = `${level} | ${chg >= 0 ? '+' : ''}${chg.toFixed(2)} (${pct >= 0 ? '+' : ''}${pct.toFixed(2)}%)`;
+                        subEl.style.color = chg >= 0 ? UP_COLOR : DOWN_COLOR;
+                    } else {
+                        subEl.textContent = level;
+                    }
                 }
+                renderVixCard('vix', 'p2-idx-vix');
+                renderVixCard('vixtwn', 'p2-idx-vixtwn');
+
+                // Show/hide VIXTWN card based on data availability
+                const vixtwnCard = document.getElementById('p2-vixtwn-card');
+                const sentGrid = document.getElementById('p2-sentiment-grid');
                 if (mi.vixtwn != null) {
-                    document.getElementById('p2-idx-vixtwn').textContent = mi.vixtwn.toFixed(2);
-                    document.getElementById('p2-idx-vixtwn').style.color = mi.vixtwn >= 20 ? UP_COLOR : mi.vixtwn >= 15 ? 'var(--orange)' : DOWN_COLOR;
-                    document.getElementById('p2-idx-vixtwn-sub').textContent =
-                        `${mi.vixtwn < 15 ? '低波動' : mi.vixtwn < 20 ? '正常' : mi.vixtwn < 30 ? '偏高' : '恐慌'}`;
+                    vixtwnCard.style.display = '';
+                    sentGrid.style.gridTemplateColumns = '1fr 1fr 1fr';
+                } else {
+                    sentGrid.style.gridTemplateColumns = '1fr 1fr';
                 }
+
                 if (mi.fear_greed != null) {
                     const score = mi.fear_greed;
                     const rating = mi.fear_greed_rating || '';
@@ -2615,7 +2634,15 @@
                     document.getElementById('p2-idx-feargreed').style.color =
                         score <= 25 ? DOWN_COLOR : score <= 45 ? 'var(--orange)' : score <= 55 ? 'var(--text)' : score <= 75 ? UP_COLOR : UP_COLOR;
                     const ratingMap = { 'Extreme Fear': '極度恐懼', 'Fear': '恐懼', 'Neutral': '中性', 'Greed': '貪婪', 'Extreme Greed': '極度貪婪' };
-                    document.getElementById('p2-idx-feargreed-sub').textContent = ratingMap[rating] || rating || '-';
+                    const ratingText = ratingMap[rating] || rating || '-';
+                    const fgChg = mi.fear_greed_chg;
+                    const subEl = document.getElementById('p2-idx-feargreed-sub');
+                    if (fgChg != null) {
+                        subEl.textContent = `${ratingText} | ${fgChg >= 0 ? '+' : ''}${fgChg.toFixed(1)}`;
+                        subEl.style.color = fgChg >= 0 ? UP_COLOR : DOWN_COLOR;
+                    } else {
+                        subEl.textContent = ratingText;
+                    }
                 }
 
                 // ── Global Macro: DXY, Oil, Gold, US 10Y ──
@@ -2660,52 +2687,7 @@
                 }
             }
 
-            // Fallback: try live fetch if strategy.json has no VIX data
-            if (!strategyData?.market_indices?.vix) {
-                try {
-                    const vixRes = await fetch('https://query1.finance.yahoo.com/v8/finance/chart/%5EVIX?range=2d&interval=1d');
-                    if (vixRes.ok) {
-                        const vixData = await vixRes.json();
-                        const closes = vixData.chart?.result?.[0]?.indicators?.quote?.[0]?.close || [];
-                        const vixNow = closes[closes.length - 1];
-                        if (vixNow) {
-                            document.getElementById('p2-idx-vix').textContent = vixNow.toFixed(2);
-                            document.getElementById('p2-idx-vix').style.color = vixNow >= 20 ? UP_COLOR : vixNow >= 15 ? 'var(--orange)' : DOWN_COLOR;
-                            document.getElementById('p2-idx-vix-sub').textContent = vixNow < 15 ? '低波動' : vixNow < 20 ? '正常' : vixNow < 30 ? '偏高' : '恐慌';
-                        }
-                    }
-                } catch (e) { console.warn('VIX live fetch failed:', e); }
-
-                try {
-                    const vtRes = await fetch('https://query1.finance.yahoo.com/v8/finance/chart/%5ETWVIX?range=2d&interval=1d');
-                    if (vtRes.ok) {
-                        const vtData = await vtRes.json();
-                        const closes = vtData.chart?.result?.[0]?.indicators?.quote?.[0]?.close || [];
-                        const vtNow = closes[closes.length - 1];
-                        if (vtNow) {
-                            document.getElementById('p2-idx-vixtwn').textContent = vtNow.toFixed(2);
-                            document.getElementById('p2-idx-vixtwn').style.color = vtNow >= 20 ? UP_COLOR : vtNow >= 15 ? 'var(--orange)' : DOWN_COLOR;
-                            document.getElementById('p2-idx-vixtwn-sub').textContent = vtNow < 15 ? '低波動' : vtNow < 20 ? '正常' : vtNow < 30 ? '偏高' : '恐慌';
-                        }
-                    }
-                } catch (e) { console.warn('VIXTWN live fetch failed:', e); }
-
-                try {
-                    const fgRes = await fetch('https://production.dataviz.cnn.io/index/fearandgreed/graphdata');
-                    if (fgRes.ok) {
-                        const fgData = await fgRes.json();
-                        const score = fgData.fear_and_greed?.score;
-                        const rating = fgData.fear_and_greed?.rating;
-                        if (score != null) {
-                            document.getElementById('p2-idx-feargreed').textContent = Math.round(score);
-                            document.getElementById('p2-idx-feargreed').style.color =
-                                score <= 25 ? DOWN_COLOR : score <= 45 ? 'var(--orange)' : score <= 55 ? 'var(--text)' : score <= 75 ? UP_COLOR : UP_COLOR;
-                            const ratingMap = { 'Extreme Fear': '極度恐懼', 'Fear': '恐懼', 'Neutral': '中性', 'Greed': '貪婪', 'Extreme Greed': '極度貪婪' };
-                            document.getElementById('p2-idx-feargreed-sub').textContent = ratingMap[rating] || rating;
-                        }
-                    }
-                } catch (e) { console.warn('Fear & Greed live fetch failed:', e); }
-            }
+            // All market data now comes from strategy.json (backend pre-fetched)
         }
 
         function renderPage2() {
