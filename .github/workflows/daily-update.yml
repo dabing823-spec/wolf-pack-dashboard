@@ -1,0 +1,124 @@
+name: Daily ETF Update
+
+on:
+  schedule:
+    # 台灣時間 16:30 (UTC 08:30) — 收盤後執行
+    - cron: '30 8 * * 1-5'
+  workflow_dispatch:
+    inputs:
+      days:
+        description: '下載最近 N 天的 Excel'
+        required: false
+        default: '7'
+
+permissions:
+  contents: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: |
+          pip install pandas openpyxl requests numpy \
+            google-auth google-auth-httplib2 google-api-python-client
+
+      - name: Download ETF Excel from Google Drive
+        env:
+          GDRIVE_SERVICE_ACCOUNT_JSON: ${{ secrets.GDRIVE_SERVICE_ACCOUNT_JSON }}
+          GDRIVE_FOLDER_ID: ${{ secrets.GDRIVE_FOLDER_ID }}
+        run: |
+          python scripts/download_gdrive.py --days ${{ inputs.days || '7' }}
+
+      - name: Run Pipeline
+        env:
+          GITHUB_ACTIONS: 'true'
+          LINE_NOTIFY_TOKEN: ${{ secrets.LINE_NOTIFY_TOKEN }}
+        run: |
+          cd scripts/agents
+          python orchestrator.py --no-ai --no-alert
+
+      - name: Run Strategy Engine
+        run: |
+          cd scripts
+          python strategy_engine.py
+
+      - name: Validate output
+        run: |
+          echo "=== Checking output files ==="
+          for f in data/dashboard.json data/etf_pages.json data/strategy.json; do
+            if [ -f "$f" ]; then
+              size=$(stat -c%s "$f")
+              echo "✅ $f: $size bytes"
+              if [ "$size" -lt 100 ]; then
+                echo "❌ $f too small!"
+                exit 1
+              fi
+            else
+              echo "❌ $f not found!"
+              exit 1
+            fi
+          done
+
+      - name: Commit & Push
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add data/
+          if git diff --cached --quiet; then
+            echo "No changes to commit"
+          else
+            DATE=$(python -c "import json; print(json.load(open('data/dashboard.json'))['report_date'])")
+            git commit -m "📊 Daily update: ${DATE}"
+            git push
+          fi
+
+      - name: Send LINE alert on ETF changes
+        if: success()
+        env:
+          LINE_NOTIFY_TOKEN: ${{ secrets.LINE_NOTIFY_TOKEN }}
+          GITHUB_ACTIONS: 'true'
+        run: |
+          cd scripts/agents
+          python -c "
+          from alert_agent import run
+          from config import FINANCE_DATA
+          import json, os
+
+          # 嘗試從 signal data 發送異動通知
+          sig_path = FINANCE_DATA / 'etf_signal_data.json'
+          if sig_path.exists():
+              result = run()
+              print(f'Alert result: {result[\"status\"]}')
+          else:
+              print('No signal data, skipping alerts')
+          "
+
+  notify-failure:
+    runs-on: ubuntu-latest
+    needs: update
+    if: failure()
+    steps:
+      - name: Send LINE failure notification
+        env:
+          LINE_NOTIFY_TOKEN: ${{ secrets.LINE_NOTIFY_TOKEN }}
+        run: |
+          if [ -z "$LINE_NOTIFY_TOKEN" ]; then
+            echo "LINE_NOTIFY_TOKEN not set, skipping"
+            exit 0
+          fi
+          MSG=$'\n❌ Wolf Pack Pipeline 失敗\n📅 '"$(date '+%Y-%m-%d %H:%M')"$'\n🔗 '"$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
+          curl -s -X POST https://notify-api.line.me/api/notify \
+            -H "Authorization: Bearer $LINE_NOTIFY_TOKEN" \
+            -d "message=$MSG"
+          echo "LINE failure notification sent"

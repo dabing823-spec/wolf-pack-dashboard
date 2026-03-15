@@ -19,9 +19,12 @@ import pandas as pd
 import numpy as np
 
 # ═══════════════════════════════════════
-# 路徑設定（自動偵測 Mac / Windows）
+# 路徑設定（自動偵測 Mac / Windows / GitHub Actions）
 # ═══════════════════════════════════════
-if platform.system() == "Windows":
+if os.environ.get("GITHUB_ACTIONS") == "true":
+    _workspace = Path(os.environ.get("GITHUB_WORKSPACE", "."))
+    BASE = _workspace / "history" / "ETF"
+elif platform.system() == "Windows":
     _gdrive = Path("G:/其他電腦/我的 Mac/FinanceData/history/ETF")
     BASE = _gdrive if _gdrive.exists() else Path(os.path.expanduser("~/FinanceData/history/ETF"))
 else:

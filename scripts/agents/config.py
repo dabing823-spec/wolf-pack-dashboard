@@ -34,8 +34,8 @@ REPO_DIR = Path(__file__).resolve().parent.parent.parent  # wolf-pack-dashboard/
 SCRIPTS_DIR = REPO_DIR / "scripts"
 AGENTS_DIR = SCRIPTS_DIR / "agents"
 DATA_DIR = REPO_DIR / "data"
-LOG_DIR = FINANCE_DATA / "logs"
-REPORT_DIR = FINANCE_DATA  # signal reports go here
+LOG_DIR = REPO_DIR / "logs" if IS_GITHUB else FINANCE_DATA / "logs"
+REPORT_DIR = REPO_DIR if IS_GITHUB else FINANCE_DATA  # signal reports go here
 
 # ── ETF 設定 ──
 ETF_IDS = ["00981A", "00980A", "00982A", "00991A", "00993A"]
