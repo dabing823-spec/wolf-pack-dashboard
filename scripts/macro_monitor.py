@@ -39,10 +39,13 @@ HEADERS = {
 # ── Phase 2: 警報門檻 ──
 ALERT_THRESHOLDS = {
     'vix': {
-        'panic': 30, 'fear': 23, 'low': 15,
-        'panic_msg': '🔴 VIX 突破 30 — 市場已在恐慌中',
-        'fear_msg': '⚠️ VIX 突破 23 — 恐慌開始加速',
-        'low_msg': '💤 VIX 跌破 15 — 市場過度樂觀，留意反轉',
+        'panic': 30,
+        'low': 15,
+        'panic_msg': '🔴 VIX > 30 — 市場已在恐慌中',
+        'panic_accel_msg': '🔴🔴 VIX > 30 且斜率仍正 — 極高風險，恐慌尚未見頂',
+        'low_msg': '💤 VIX < 15 — 市場過度樂觀，留意反轉',
+        'accel_msg': '⚠️ VIX 恐慌加速中 — 20日斜率持續為正且加速，恐慌情緒正在擴散',
+        'decel_msg': '📉 VIX 恐慌趨緩 — 加速度轉負，可能即將見頂反轉',
     },
     'dxy': {
         'daily_pct': 1.0,
@@ -176,20 +179,90 @@ def save_history(indices):
         json.dump(history, f, ensure_ascii=False)
 
 
+def calc_vix_dynamics():
+    """Calculate VIX slope (velocity) and acceleration from history.
+
+    Research basis:
+    - VIX 緩步墊高比突然飆升更能預測後續崩盤
+    - 20日斜率持續為正且加速中 = 恐慌在累積
+    - 絕對值 > 30 + 斜率仍正 = 極高風險
+    - 加速度為正 = 恐慌擴散中，尚未見頂
+    - 加速度轉負 = 可能即將見頂反轉
+    """
+    history = []
+    if INDICES_HISTORY_PATH.exists():
+        try:
+            with open(INDICES_HISTORY_PATH, 'r', encoding='utf-8') as f:
+                data = json.load(f)
+                history = data if isinstance(data, list) else []
+        except Exception:
+            pass
+
+    vix_series = [h['vix'] for h in history if h.get('vix') is not None]
+    if len(vix_series) < 5:
+        return None
+
+    # Short-term slope (last 5 data points)
+    recent5 = vix_series[-5:]
+    slope_5 = (recent5[-1] - recent5[0]) / len(recent5)
+
+    # Medium-term slope (last 10 data points, or all if less)
+    n = min(len(vix_series), 10)
+    recent_n = vix_series[-n:]
+    slope_10 = (recent_n[-1] - recent_n[0]) / len(recent_n)
+
+    # Acceleration: change in slope (5-point slope now vs 5 points ago)
+    acceleration = None
+    if len(vix_series) >= 10:
+        prev5 = vix_series[-10:-5]
+        prev_slope = (prev5[-1] - prev5[0]) / len(prev5)
+        acceleration = slope_5 - prev_slope
+
+    return {
+        'current': vix_series[-1],
+        'slope_5': round(slope_5, 3),
+        'slope_10': round(slope_10, 3),
+        'acceleration': round(acceleration, 3) if acceleration is not None else None,
+        'trend': 'rising' if slope_5 > 0.1 else 'falling' if slope_5 < -0.1 else 'flat',
+        'n_points': len(vix_series),
+    }
+
+
 def check_alerts(indices):
     """Phase 2: Check thresholds and return alert messages."""
     alerts = []
 
-    # VIX level alerts (23=恐慌加速, 30=已在恐慌中)
+    # VIX dynamics-based alerts
     vix = indices.get('vix')
+    t = ALERT_THRESHOLDS['vix']
+
     if vix is not None:
-        t = ALERT_THRESHOLDS['vix']
+        dynamics = calc_vix_dynamics()
+
         if vix >= t['panic']:
-            alerts.append(f"{t['panic_msg']} (VIX={vix})")
-        elif vix >= t['fear']:
-            alerts.append(f"{t['fear_msg']} (VIX={vix})")
+            if dynamics and dynamics['slope_5'] > 0:
+                # VIX > 30 且還在上升 = 極高風險
+                alerts.append(f"{t['panic_accel_msg']} (VIX={vix}, 斜率={dynamics['slope_5']:+.2f})")
+            else:
+                alerts.append(f"{t['panic_msg']} (VIX={vix})")
         elif vix <= t['low']:
             alerts.append(f"{t['low_msg']} (VIX={vix})")
+        elif dynamics and dynamics['n_points'] >= 5:
+            slope = dynamics['slope_5']
+            accel = dynamics.get('acceleration')
+
+            # 斜率為正（VIX 在上升）且加速度為正（上升在加快）= 恐慌加速
+            if slope > 0.1 and accel is not None and accel > 0:
+                alerts.append(
+                    f"{t['accel_msg']} "
+                    f"(VIX={vix}, 斜率={slope:+.2f}/期, 加速度={accel:+.2f})"
+                )
+            # 之前在上升但加速度轉負 = 可能見頂
+            elif slope > 0.1 and accel is not None and accel < -0.1 and vix >= 20:
+                alerts.append(
+                    f"{t['decel_msg']} "
+                    f"(VIX={vix}, 斜率={slope:+.2f}/期, 加速度={accel:+.2f})"
+                )
 
     # Percentage-based alerts (DXY, Gold, Oil)
     for key in ['dxy', 'gold', 'oil']:
@@ -279,7 +352,23 @@ def generate_brief(indices):
         return ""
 
     vix = indices.get('vix', '-')
-    vix_level = '恐慌中' if vix != '-' and vix >= 30 else '恐慌加速' if vix != '-' and vix >= 23 else '偏高' if vix != '-' and vix >= 20 else '正常' if vix != '-' and vix >= 15 else '低波動'
+    # VIX level with dynamics
+    if vix == '-':
+        vix_level = '-'
+    elif vix >= 30:
+        vix_level = '恐慌中'
+    elif vix >= 20:
+        dynamics = calc_vix_dynamics()
+        if dynamics and dynamics['slope_5'] > 0.1 and dynamics.get('acceleration', 0) > 0:
+            vix_level = f"偏高↗加速 (斜率{dynamics['slope_5']:+.1f})"
+        elif dynamics and dynamics['slope_5'] > 0.1:
+            vix_level = '偏高↗上升中'
+        else:
+            vix_level = '偏高'
+    elif vix >= 15:
+        vix_level = '正常'
+    else:
+        vix_level = '低波動'
 
     fg = indices.get('fear_greed', '-')
     fg_map = {'extreme fear': '極度恐懼', 'fear': '恐懼', 'neutral': '中性', 'greed': '貪婪', 'extreme greed': '極度貪婪'}
