@@ -1201,6 +1201,7 @@
             <button class="nav-btn" data-page="p6">📊 跟單回測</button>
             <button class="nav-btn" data-page="p7">🏛 0050 / 市值</button>
             <button class="nav-btn" data-page="p8">🛡 風險訊號</button>
+            <button class="nav-btn" data-page="p9">🤖 AI 問答</button>
         </nav>
     </header>
 
@@ -2426,6 +2427,24 @@
                     <p style="color:var(--text-muted);font-size:0.78rem;"><em>資料來源：MODEL_ANALYSIS_REPORT_20260313 (基於選擇權隱含特徵之台指期風險預測) & RESEARCH_LOG_20260313 (流動性風險研究實驗日誌, risk_v1)</em></p>
                 </div>
             </details>
+        </div>
+
+        <!-- Page 9: AI 問答 (NotebookLM) -->
+        <div class="page" id="p9">
+            <div class="page-title">🤖 AI 問答</div>
+
+            <div style="margin-bottom: 1.25rem; padding: 0.65rem 1rem; background: linear-gradient(90deg, rgba(79,142,247,0.06), transparent); border-radius: 8px; border-left: 2px solid var(--accent); font-size: 0.82rem; color: var(--text-muted); line-height: 1.7;">
+                基於 NotebookLM 的 AI 研究助手。可以針對 ETF 持股、策略分析、市場觀察等問題進行互動式問答。資料來源為每日更新的持股報告與研究分析。
+            </div>
+
+            <div style="background:var(--card); border:1px solid var(--border); border-radius:16px; overflow:hidden; height:calc(100vh - 220px); min-height:500px;">
+                <iframe
+                    src="https://notebooklm.google.com/notebook/9bec166a-94f4-45cc-8ef7-59520e8ee192"
+                    style="width:100%; height:100%; border:none;"
+                    allow="clipboard-write"
+                    loading="lazy"
+                ></iframe>
+            </div>
         </div>
 
     </div>
