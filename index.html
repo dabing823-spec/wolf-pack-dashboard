@@ -30,7 +30,7 @@
             --card-hover: #22263a;
             --border: #2a2e3d;
             --text: #e4e6eb;
-            --text-muted: #8b8fa3;
+            --text-muted: #a0a5b8;
             --accent: #4f8ef7;
             --green: #00c48c;
             --red: #ff4757;
@@ -103,6 +103,42 @@
         nav button.active {
             background-color: var(--accent);
             color: white;
+            box-shadow: 0 2px 8px rgba(79,142,247,0.3);
+        }
+
+        /* R3: Last updated badge in header */
+        .last-updated {
+            font-size: 0.82rem;
+            color: var(--text-muted);
+            background: rgba(255,255,255,0.04);
+            padding: 0.3rem 0.8rem;
+            border-radius: 6px;
+            white-space: nowrap;
+        }
+
+        /* R17: Back to top button */
+        .back-to-top {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: var(--accent);
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-size: 1.2rem;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 12px rgba(79,142,247,0.4);
+            z-index: 99;
+            transition: opacity 0.3s, transform 0.3s;
+        }
+        .back-to-top:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 16px rgba(79,142,247,0.5);
         }
 
         /* Container */
@@ -135,6 +171,7 @@
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
             gap: 1.5rem;
             margin-bottom: 2rem;
+            align-items: stretch;
         }
 
         .kpi-card {
@@ -143,6 +180,8 @@
             border-radius: 12px;
             padding: 1.5rem;
             transition: all 0.3s ease;
+            display: flex;
+            flex-direction: column;
         }
 
         .kpi-card:hover {
@@ -1205,7 +1244,7 @@
 <body>
     <!-- Header -->
     <header>
-        <div class="logo">📊 JOY88 主動式 ETF 追蹤儀表板</div>
+        <div class="logo">📊 JOY88 主動式 ETF 追蹤儀表板 <span class="last-updated" id="header-last-updated"></span></div>
         <nav>
             <button class="nav-btn active" data-page="p2">🎯 戰略儀表板</button>
             <button class="nav-btn" data-page="p8">🛡 風險訊號</button>
@@ -2525,6 +2564,7 @@
                 // Initialize dashboard
                 initializePage('p2');
                 renderPage('p2');
+                updateHeaderTimestamp();
             } catch (error) {
                 console.error('Error loading data:', error);
                 showLoadingError();
@@ -5497,11 +5537,27 @@
             </div>`;
         }
 
-        function renderPage10() {
-            const articles = newsAnalysisData && newsAnalysisData.news_analyses;
+        async function renderPage10() {
             const emptyEl = document.getElementById('p10-empty');
             const tabsEl = document.getElementById('p10-tabs');
             const artEl = document.getElementById('p10-articles');
+
+            // Always fetch fresh data when visiting p10
+            if (!newsAnalysisData) {
+                try {
+                    const res = await fetch(`data/news_analysis.json?t=${Date.now()}`);
+                    if (res.ok) {
+                        newsAnalysisData = await res.json();
+                        console.log('p10: loaded news data,', newsAnalysisData.news_analyses?.length, 'articles');
+                    } else {
+                        console.warn('p10: fetch failed, status', res.status);
+                    }
+                } catch (e) {
+                    console.warn('p10: fetch error', e);
+                }
+            }
+
+            const articles = newsAnalysisData && newsAnalysisData.news_analyses;
 
             if (!articles || articles.length === 0) {
                 emptyEl.style.display = 'block';
@@ -5571,7 +5627,35 @@
         // Initialization
         // ============================================================================
         document.addEventListener('DOMContentLoaded', loadData);
+
+        // R3: Update header last-updated badge
+        function updateHeaderTimestamp() {
+            const el = document.getElementById('header-last-updated');
+            if (el && dashboardData && dashboardData.report_date) {
+                el.textContent = '📅 ' + dashboardData.report_date;
+            }
+        }
+
+        // R5: Chart.js global font size increase
+        if (window.Chart) {
+            Chart.defaults.font.size = 14;
+            Chart.defaults.plugins.legend.labels.font = { size: 14 };
+            Chart.defaults.plugins.tooltip.titleFont = { size: 14 };
+            Chart.defaults.plugins.tooltip.bodyFont = { size: 13 };
+            Chart.defaults.scale = Chart.defaults.scale || {};
+        }
+
+        // R17: Back to top button
+        window.addEventListener('scroll', function() {
+            const btn = document.getElementById('back-to-top');
+            if (btn) {
+                btn.style.display = window.scrollY > 400 ? 'flex' : 'none';
+            }
+        });
     </script>
+
+    <!-- R17: Back to top button -->
+    <button class="back-to-top" id="back-to-top" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="回頂部">&#9650;</button>
 </body>
 </html>
 <!-- deploy 1773501647 -->
