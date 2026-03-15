@@ -5247,8 +5247,6 @@
             grid.innerHTML = rs.signals.map(s => {
                 const signalColor = s.signal === 'red' ? 'var(--red)' : s.signal === 'yellow' ? 'var(--orange)' : 'var(--green)';
                 const signalIcon = s.signal === 'red' ? '&#9650;' : s.signal === 'yellow' ? '&#9644;' : '&#9660;';
-                const sparkData = history[s.key] || [];
-                const sparkHtml = _p8Sparkline(sparkData, 120, 32);
                 const valStr = s.value != null ? (typeof s.value === 'number' ? s.value.toFixed(2) : s.value) : '-';
 
                 // Acceleration badge
@@ -5286,11 +5284,12 @@
                             ${s.desc}${extHtml ? '<br>' + extHtml : ''}<br>
                             <span class="risk-signal-theory">${s.theory || ''}</span>
                         </div>
-                        <div class="risk-signal-spark">${sparkHtml}</div>
+                        <div class="risk-signal-spark"><canvas id="p8-spark-${s.key}" width="120" height="32"></canvas></div>
                     </div>
                     <div class="risk-signal-hint">點擊查看詳情</div>
                 </div>`;
             }).join('');
+            _p8InitSparkCharts(rs);
         }
 
         function _p8ShowDetail(key) {
@@ -5305,9 +5304,6 @@
 
             const signalColor = sig.signal === 'red' ? 'var(--red)' : sig.signal === 'yellow' ? 'var(--orange)' : 'var(--green)';
             const valStr = sig.value != null ? (typeof sig.value === 'number' ? sig.value.toFixed(4) : sig.value) : '-';
-
-            // Large sparkline
-            const bigSpark = _p8Sparkline(histData, 660, 180);
 
             // Phase description
             const phaseMap = {
@@ -5347,11 +5343,7 @@
                 </div>
 
                 <div class="risk-modal-chart">
-                    ${bigSpark}
-                    <div style="display:flex;justify-content:space-between;font-size:0.7rem;color:var(--text-muted);margin-top:0.25rem;">
-                        <span>${histData.length > 0 ? histData[0].date : ''}</span>
-                        <span>${histData.length > 0 ? histData[histData.length - 1].date : ''}</span>
-                    </div>
+                    <canvas id="p8-modal-chart-canvas" width="660" height="180" style="display:block;"></canvas>
                 </div>
 
                 <div class="risk-modal-kpis">
@@ -5384,6 +5376,7 @@
             `;
 
             modal.style.display = 'block';
+            _p8InitModalChart(histData);
         }
 
         // Close modal on Escape
