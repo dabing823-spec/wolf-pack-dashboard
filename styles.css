@@ -46,8 +46,8 @@ body {
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Noto Sans', sans-serif;
     background-color: var(--bg);
     color: var(--text);
-    line-height: 1.6;
-    font-size: 15px;
+    line-height: 1.7;
+    font-size: 16px;
 }
 
 a { color: var(--accent); text-decoration: none; }
@@ -85,9 +85,10 @@ nav {
 }
 
 nav button {
-    padding: 0.6rem 1.5rem;
+    padding: 0.65rem 1.5rem;
     border: none;
     border-radius: 20px;
+    font-size: 0.95rem;
     background-color: var(--border);
     color: var(--text-muted);
     cursor: pointer;
@@ -313,21 +314,21 @@ footer {
    4. Typography
    ───────────────────────────────────── */
 .page-title {
-    font-size: 1.75rem;
+    font-size: 1.85rem;
     font-weight: 700;
     margin-bottom: 1.5rem;
     color: var(--text);
 }
 
 .chart-title {
-    font-size: 0.95rem;
+    font-size: 1rem;
     font-weight: 600;
     color: var(--text);
     margin-bottom: 1rem;
 }
 
 .section-title {
-    font-size: 1.1rem;
+    font-size: 1.15rem;
     font-weight: 600;
     color: var(--text);
     margin-bottom: 1rem;
@@ -402,7 +403,7 @@ footer {
 }
 
 .kpi-label {
-    font-size: 0.85rem;
+    font-size: 0.9rem;
     color: var(--text-muted);
     text-transform: uppercase;
     letter-spacing: 0.05em;
@@ -410,27 +411,27 @@ footer {
 }
 
 .kpi-value {
-    font-size: 1.5rem;
+    font-size: 1.75rem;
     font-weight: 700;
     color: var(--accent);
     margin-bottom: 0.25rem;
 }
 
 .kpi-subtext {
-    font-size: 0.75rem;
+    font-size: 0.82rem;
     color: var(--text-muted);
 }
 
 /* Intro box */
 .intro-box {
     margin-bottom: 1.25rem;
-    padding: 0.75rem 1rem;
+    padding: 0.85rem 1.1rem;
     background: rgba(79,142,247,0.06);
     border-radius: 8px;
     border-left: 3px solid var(--cyan);
-    font-size: 0.9rem;
+    font-size: 0.95rem;
     color: var(--text-secondary);
-    line-height: 1.7;
+    line-height: 1.8;
 }
 
 .intro-box.green { border-left-color: var(--green); }
@@ -508,7 +509,7 @@ footer {
 }
 
 .table-title {
-    font-size: 0.95rem;
+    font-size: 1rem;
     font-weight: 600;
     color: var(--text);
     margin-bottom: 1rem;
@@ -533,7 +534,7 @@ th {
     text-align: left;
     font-weight: 600;
     color: var(--text-muted);
-    font-size: 0.85rem;
+    font-size: 0.88rem;
     text-transform: uppercase;
     border-bottom: 1px solid var(--border);
     cursor: pointer;
@@ -550,7 +551,7 @@ th:hover {
 td {
     padding: 1rem 1rem;
     border-bottom: 1px solid var(--border);
-    font-size: 0.9rem;
+    font-size: 0.95rem;
 }
 
 tr {
@@ -639,7 +640,7 @@ tbody tr:nth-child(even) {
    ───────────────────────────────────── */
 .badge {
     display: inline-block;
-    padding: 0.25rem 0.75rem;
+    padding: 0.3rem 0.8rem;
     border-radius: 4px;
     font-size: 0.75rem;
     font-weight: 600;
