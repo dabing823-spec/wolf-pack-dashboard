@@ -804,6 +804,262 @@
         .hidden {
             display: none;
         }
+
+        /* ═══ P8 Risk Signal Styles ═══ */
+        .risk-intro {
+            margin-bottom: 1.25rem;
+            padding: 0.75rem 1rem;
+            background: rgba(79,142,247,0.06);
+            border-radius: 8px;
+            border-left: 3px solid var(--cyan);
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            line-height: 1.7;
+        }
+
+        .risk-score-panel {
+            display: flex;
+            align-items: center;
+            gap: 2rem;
+            margin-bottom: 2rem;
+            padding: 1.5rem;
+            background: var(--card);
+            border-radius: 12px;
+            border: 1px solid var(--border);
+        }
+
+        .risk-score-ring {
+            position: relative;
+            width: 140px;
+            height: 140px;
+            flex-shrink: 0;
+        }
+
+        .risk-score-num {
+            font-size: 2.5rem;
+            font-weight: 700;
+            line-height: 1;
+        }
+
+        .risk-score-label {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .risk-signals-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .risk-signal-card {
+            background: var(--card);
+            border-radius: 10px;
+            border: 1px solid var(--border);
+            padding: 1rem 1.25rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            cursor: pointer;
+            transition: border-color 0.2s, transform 0.15s, box-shadow 0.2s;
+        }
+
+        .risk-signal-card:hover {
+            border-color: var(--accent);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        }
+
+        .risk-signal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .risk-signal-name {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .risk-signal-icon {
+            font-size: 1.1rem;
+        }
+
+        .risk-signal-title {
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+
+        .risk-signal-value {
+            font-size: 1.1rem;
+            font-weight: 700;
+        }
+
+        .risk-signal-body {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+        }
+
+        .risk-signal-desc {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            line-height: 1.6;
+            flex: 1;
+        }
+
+        .risk-signal-theory {
+            font-size: 0.72rem;
+            opacity: 0.6;
+        }
+
+        .risk-signal-spark {
+            flex-shrink: 0;
+            margin-left: 0.75rem;
+        }
+
+        .risk-signal-hint {
+            text-align: right;
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            opacity: 0.5;
+        }
+
+        .risk-accel-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 2px;
+            padding: 1px 6px;
+            border-radius: 8px;
+            font-size: 0.65rem;
+            font-weight: 600;
+        }
+
+        .risk-accel-accelerating {
+            background: rgba(255,71,87,0.15);
+            color: var(--red);
+        }
+
+        .risk-accel-decelerating {
+            background: rgba(0,196,140,0.15);
+            color: var(--green);
+        }
+
+        .risk-accel-stable {
+            background: rgba(139,143,163,0.15);
+            color: var(--text-muted);
+        }
+
+        .risk-agent-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.75rem;
+            margin-top: 0.5rem;
+        }
+
+        .risk-research-card {
+            padding: 0.75rem 1rem;
+            border-radius: 8px;
+            border-left: 3px solid;
+            margin-bottom: 0;
+        }
+
+        .risk-research-title {
+            font-weight: 600;
+            color: var(--text);
+            margin-bottom: 0.4rem;
+        }
+
+        .risk-research-importance {
+            font-size: 0.8rem;
+        }
+
+        .risk-modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            z-index: 200;
+            background: rgba(0,0,0,0.7);
+            backdrop-filter: blur(4px);
+            overflow-y: auto;
+        }
+
+        .risk-modal-content {
+            max-width: 720px;
+            margin: 3rem auto;
+            background: var(--card);
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            padding: 1.5rem 2rem;
+            position: relative;
+        }
+
+        .risk-modal-close {
+            position: absolute;
+            top: 1rem;
+            right: 1.25rem;
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-size: 1.5rem;
+            cursor: pointer;
+            line-height: 1;
+        }
+
+        .risk-modal-close:hover {
+            color: var(--text);
+        }
+
+        .risk-modal-chart {
+            background: var(--bg);
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1.5rem;
+            overflow: hidden;
+        }
+
+        .risk-modal-kpis {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .risk-modal-kpi {
+            background: var(--bg);
+            border-radius: 8px;
+            padding: 0.75rem 1rem;
+            text-align: center;
+        }
+
+        @media (max-width: 768px) {
+            .risk-score-panel {
+                flex-direction: column;
+                text-align: center;
+                gap: 1rem;
+                padding: 1rem;
+            }
+
+            .risk-signals-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .risk-agent-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .risk-modal-kpis {
+                grid-template-columns: 1fr;
+            }
+
+            .risk-modal-content {
+                margin: 1rem;
+                padding: 1rem;
+            }
+        }
     </style>
 </head>
 <body>
@@ -1910,7 +2166,7 @@
         <div class="page" id="p8">
             <div class="page-title">🛡 宏觀風險訊號儀表板</div>
 
-            <div style="margin-bottom: 1.25rem; padding: 0.75rem 1rem; background: rgba(79,142,247,0.06); border-radius: 8px; border-left: 3px solid var(--cyan); font-size: 0.9rem; color: var(--text-secondary); line-height: 1.7;">
+            <div class="risk-intro">
                 基於選擇權隱含特徵研究與流動性風險實驗，追蹤 8 個宏觀風險指標的 20 日趨勢斜率。<br>
                 核心理論：<strong>VIX 斜率</strong>比絕對值重要、<strong>SPY/JPY</strong> 套利平倉是最強領先指標、<strong>HYG/TLT</strong> 反映流動性枯竭速度。
             </div>
@@ -1919,7 +2175,7 @@
             <div id="p8-agent-panel" style="display:none; margin-bottom:1.25rem;">
                 <details>
                     <summary style="cursor:pointer;font-size:0.8rem;color:var(--text-muted);padding:0.5rem 0;">Agent Pipeline 狀態</summary>
-                    <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:0.75rem; margin-top:0.5rem;">
+                    <div class="risk-agent-grid">
                         <div id="p8-agent-data" class="kpi-card" style="padding:0.75rem 1rem;"></div>
                         <div id="p8-agent-validator" class="kpi-card" style="padding:0.75rem 1rem;"></div>
                         <div id="p8-agent-signal" class="kpi-card" style="padding:0.75rem 1rem;"></div>
@@ -1929,8 +2185,8 @@
             </div>
 
             <!-- Score -->
-            <div style="display:flex; align-items:center; gap:2rem; margin-bottom:2rem; padding:1.5rem; background:var(--card); border-radius:12px; border:1px solid var(--border);">
-                <div id="p8-score-ring" style="position:relative; width:140px; height:140px; flex-shrink:0;">
+            <div class="risk-score-panel">
+                <div id="p8-score-ring" class="risk-score-ring">
                     <svg width="140" height="140" viewBox="0 0 140 140">
                         <circle cx="70" cy="70" r="60" fill="none" stroke="var(--border)" stroke-width="10"/>
                         <circle id="p8-ring" cx="70" cy="70" r="60" fill="none" stroke="var(--green)" stroke-width="10"
@@ -1938,24 +2194,24 @@
                             transform="rotate(-90 70 70)" style="transition:stroke-dashoffset 1s ease, stroke 0.5s;"/>
                     </svg>
                     <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;">
-                        <div id="p8-score-num" style="font-size:2.5rem;font-weight:700;line-height:1;">-</div>
+                        <div id="p8-score-num" class="risk-score-num">-</div>
                         <div style="font-size:0.75rem;color:var(--text-muted);">/10</div>
                     </div>
                 </div>
                 <div>
-                    <div id="p8-score-label" style="font-size:1.5rem;font-weight:600;margin-bottom:0.5rem;">載入中...</div>
+                    <div id="p8-score-label" class="risk-score-label">載入中...</div>
                     <div id="p8-score-detail" style="color:var(--text-secondary);font-size:0.9rem;line-height:1.6;"></div>
                     <div id="p8-score-time" style="color:var(--text-muted);font-size:0.8rem;margin-top:0.5rem;"></div>
                 </div>
             </div>
 
             <!-- Signal Cards Grid -->
-            <div id="p8-signals-grid" style="display:grid; grid-template-columns:repeat(2, 1fr); gap:1rem; margin-bottom:2rem;"></div>
+            <div id="p8-signals-grid" class="risk-signals-grid"></div>
 
             <!-- Signal Detail Modal (click to expand) -->
-            <div id="p8-modal" style="display:none; position:fixed; inset:0; z-index:200; background:rgba(0,0,0,0.7); backdrop-filter:blur(4px); overflow-y:auto;" onclick="if(event.target===this)this.style.display='none'">
-                <div style="max-width:720px; margin:3rem auto; background:var(--card); border-radius:12px; border:1px solid var(--border); padding:1.5rem 2rem; position:relative;">
-                    <button onclick="document.getElementById('p8-modal').style.display='none'" style="position:absolute;top:1rem;right:1.25rem;background:none;border:none;color:var(--text-muted);font-size:1.5rem;cursor:pointer;line-height:1;">&times;</button>
+            <div id="p8-modal" class="risk-modal-overlay" onclick="if(event.target===this)this.style.display='none'">
+                <div class="risk-modal-content">
+                    <button onclick="document.getElementById('p8-modal').style.display='none'" class="risk-modal-close">&times;</button>
                     <div id="p8-modal-content"></div>
                 </div>
             </div>
@@ -1965,16 +2221,16 @@
                 <summary style="cursor:pointer; font-weight:600; color:var(--text); font-size:0.95rem;">研究依據與理論基礎</summary>
                 <div style="margin-top:1rem; font-size:0.85rem; color:var(--text-secondary); line-height:1.9;">
 
-                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-bottom:1rem;">
-                        <div style="padding:0.75rem 1rem; background:rgba(255,71,87,0.06); border-radius:8px; border-left:3px solid var(--red);">
-                            <div style="font-weight:600; color:var(--text); margin-bottom:0.4rem;">1. SPY/JPY 套利平倉壓力 <span style="color:var(--red);font-size:0.8rem;">重要度 19.9%</span></div>
+                    <div class="risk-signals-grid" style="margin-bottom:1rem;">
+                        <div class="risk-research-card" style="background:rgba(255,71,87,0.06); border-left-color:var(--red);">
+                            <div class="risk-research-title">1. SPY/JPY 套利平倉壓力 <span class="risk-research-importance" style="color:var(--red);">重要度 19.9%</span></div>
                             <p>全球 Carry Trade 的核心機制：投資人借入低利率的日圓，買進高報酬的美股。當風險升高或日本央行升息，日圓走強迫使平倉。</p>
                             <p><strong>觀察重點：</strong>SPY/JPY 比值的 20 日斜率。斜率轉負代表日圓相對走強，套利交易開始解槓桿。</p>
                             <p><strong>歷史案例：</strong>2024 年 8 月日圓套利平倉事件，SPY/JPY 在崩盤前 2 週斜率即轉負且加速，台股同步重挫千點。</p>
                             <p style="color:var(--text-muted);font-size:0.78rem;">指標公式：SPY 收盤價 / JPY 匯率 → 20 日線性回歸斜率</p>
                         </div>
-                        <div style="padding:0.75rem 1rem; background:rgba(255,71,87,0.06); border-radius:8px; border-left:3px solid var(--red);">
-                            <div style="font-weight:600; color:var(--text); margin-bottom:0.4rem;">2. VIX 波動率趨勢 <span style="color:var(--red);font-size:0.8rem;">重要度 13.3%</span></div>
+                        <div class="risk-research-card" style="background:rgba(255,71,87,0.06); border-left-color:var(--red);">
+                            <div class="risk-research-title">2. VIX 波動率趨勢 <span class="risk-research-importance" style="color:var(--red);">重要度 13.3%</span></div>
                             <p>研究發現：VIX 的<strong>緩步墊高</strong>比突然飆升更能預測後續崩盤。VIX 從 15 花 20 天爬到 25 的過程，比瞬間跳到 30 更危險。</p>
                             <p><strong>觀察重點：</strong>20 日斜率持續為正且加速中 = 市場恐慌在累積。絕對值 > 30 + 斜率仍正 = 極高風險。</p>
                             <p><strong>二階導數意義：</strong>加速 = 恐慌情緒正在擴散，尚未見頂；趨緩 = 可能即將見頂反轉。</p>
@@ -1982,16 +2238,16 @@
                         </div>
                     </div>
 
-                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-bottom:1rem;">
-                        <div style="padding:0.75rem 1rem; background:rgba(255,71,87,0.06); border-radius:8px; border-left:3px solid var(--orange);">
-                            <div style="font-weight:600; color:var(--text); margin-bottom:0.4rem;">3. HYG/TLT 流動性枯竭 <span style="color:var(--orange);font-size:0.8rem;">重要度 12.5%</span></div>
+                    <div class="risk-signals-grid" style="margin-bottom:1rem;">
+                        <div class="risk-research-card" style="background:rgba(255,71,87,0.06); border-left-color:var(--orange);">
+                            <div class="risk-research-title">3. HYG/TLT 流動性枯竭 <span class="risk-research-importance" style="color:var(--orange);">重要度 12.5%</span></div>
                             <p>HYG（高收益公司債）代表風險偏好，TLT（20 年以上美國公債）代表避險需求。當 HYG/TLT 比值下降，代表資金從垃圾債撤出、湧入國債。</p>
                             <p><strong>觀察重點：</strong>比值 20 日斜率轉負 = 流動性正在收縮。斜率越負、加速越快，信用市場壓力越大。</p>
                             <p><strong>與股市的關聯：</strong>信用市場通常領先股市 1-2 週反應風險。HYG/TLT 惡化但股市還沒跌 = 最佳預警窗口。</p>
                             <p style="color:var(--text-muted);font-size:0.78rem;">指標公式：HYG ETF 價格 / TLT ETF 價格 → 20 日線性回歸斜率</p>
                         </div>
-                        <div style="padding:0.75rem 1rem; background:rgba(79,142,247,0.06); border-radius:8px; border-left:3px solid var(--accent);">
-                            <div style="font-weight:600; color:var(--text); margin-bottom:0.4rem;">4. DXY 美元壓力</div>
+                        <div class="risk-research-card" style="background:rgba(79,142,247,0.06); border-left-color:var(--accent);">
+                            <div class="risk-research-title">4. DXY 美元壓力</div>
                             <p>美元指數（DXY）走強對全球資金流有直接影響：美元升值 → 新興市場貨幣貶值 → 外資撤出 → 台股承壓。</p>
                             <p><strong>觀察重點：</strong>DXY 20 日斜率持續正值 = 美元走強趨勢中。加速走強通常伴隨全球風險資產拋售。</p>
                             <p><strong>台股關聯：</strong>外資在台股的進出與台幣匯率高度相關。美元急升 → 台幣貶值 → 外資匯出 → 台股賣壓。</p>
@@ -1999,16 +2255,16 @@
                         </div>
                     </div>
 
-                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-bottom:1rem;">
-                        <div style="padding:0.75rem 1rem; background:rgba(79,142,247,0.06); border-radius:8px; border-left:3px solid var(--accent);">
-                            <div style="font-weight:600; color:var(--text); margin-bottom:0.4rem;">5. US 10Y 公債殖利率</div>
+                    <div class="risk-signals-grid" style="margin-bottom:1rem;">
+                        <div class="risk-research-card" style="background:rgba(79,142,247,0.06); border-left-color:var(--accent);">
+                            <div class="risk-research-title">5. US 10Y 公債殖利率</div>
                             <p>10 年期美國公債殖利率是全球資產定價的錨。殖利率上升 = 債券被拋售 = 市場對通膨或升息的預期升溫。</p>
                             <p><strong>觀察重點：</strong>殖利率斜率持續正值 = 債券持續被賣出。斜率 > 0.05/日是快速攀升的警訊。</p>
                             <p><strong>對股市影響：</strong>殖利率上升提高無風險利率，壓縮股票估值（尤其成長股）。急升速度比絕對水準更重要。</p>
                             <p style="color:var(--text-muted);font-size:0.78rem;">資料來源：CBOE 10 年期美國公債殖利率指數 (^TNX)</p>
                         </div>
-                        <div style="padding:0.75rem 1rem; background:rgba(79,142,247,0.06); border-radius:8px; border-left:3px solid var(--accent);">
-                            <div style="font-weight:600; color:var(--text); margin-bottom:0.4rem;">6. CNN Fear & Greed 恐懼貪婪指數</div>
+                        <div class="risk-research-card" style="background:rgba(79,142,247,0.06); border-left-color:var(--accent);">
+                            <div class="risk-research-title">6. CNN Fear & Greed 恐懼貪婪指數</div>
                             <p>CNN 綜合 7 個市場指標（VIX、股票動能、垃圾債需求、市場寬度等）計算 0-100 的情緒分數。</p>
                             <p><strong>觀察重點：</strong>< 25 為極度恐懼，通常代表市場超賣但也可能繼續下跌。極度恐懼 + VIX 趨緩 = 反彈機率較高。</p>
                             <p><strong>作為濾網：</strong>當 Fear & Greed 為紅燈，其他指標的權重應被放大（恐慌中的惡化信號更可信）。</p>
@@ -2016,16 +2272,16 @@
                         </div>
                     </div>
 
-                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-bottom:1rem;">
-                        <div style="padding:0.75rem 1rem; background:rgba(79,142,247,0.06); border-radius:8px; border-left:3px solid var(--accent);">
-                            <div style="font-weight:600; color:var(--text); margin-bottom:0.4rem;">7. 黃金避險需求</div>
+                    <div class="risk-signals-grid" style="margin-bottom:1rem;">
+                        <div class="risk-research-card" style="background:rgba(79,142,247,0.06); border-left-color:var(--accent);">
+                            <div class="risk-research-title">7. 黃金避險需求</div>
                             <p>黃金是傳統避險資產。金價急漲通常反映：地緣政治風險升溫、通膨預期攀升、或對貨幣信用的擔憂。</p>
                             <p><strong>觀察重點：</strong>金價 20 日斜率 > 15 代表避險資金湧入。股跌金漲 = 典型 risk-off；股金齊漲 = 通膨預期。</p>
                             <p><strong>二階導數意義：</strong>金價加速上漲 = 恐慌蔓延中；金價趨緩 = 避險需求見頂。</p>
                             <p style="color:var(--text-muted);font-size:0.78rem;">資料來源：COMEX 黃金期貨 (GC=F)</p>
                         </div>
-                        <div style="padding:0.75rem 1rem; background:rgba(79,142,247,0.06); border-radius:8px; border-left:3px solid var(--accent);">
-                            <div style="font-weight:600; color:var(--text); margin-bottom:0.4rem;">8. WTI 原油價格壓力</div>
+                        <div class="risk-research-card" style="background:rgba(79,142,247,0.06); border-left-color:var(--accent);">
+                            <div class="risk-research-title">8. WTI 原油價格壓力</div>
                             <p>油價是通膨的領先指標。油價急漲 → 運輸成本上升 → 企業毛利壓縮 → CPI 上升 → 央行可能延後降息。</p>
                             <p><strong>觀察重點：</strong>油價 20 日斜率 > 2 代表通膨壓力正在累積。需求拉動（經濟擴張）vs 供給推動（地緣衝突）的性質不同。</p>
                             <p><strong>台股關聯：</strong>油價上漲對航運、塑化有利，但對電子業（能源成本）不利。整體而言油價急漲對大盤偏空。</p>
@@ -2033,8 +2289,8 @@
                         </div>
                     </div>
 
-                    <div style="padding:0.75rem 1rem; background:rgba(168,85,247,0.06); border-radius:8px; border-left:3px solid var(--purple); margin-bottom:0.75rem;">
-                        <div style="font-weight:600; color:var(--text); margin-bottom:0.4rem;">方法論：速度、加速度與統計機率</div>
+                    <div class="risk-research-card" style="background:rgba(168,85,247,0.06); border-left-color:var(--purple); margin-bottom:0.75rem;">
+                        <div class="risk-research-title">方法論：速度、加速度與統計機率</div>
                         <p><strong>一階導數（速度）：</strong>20 日線性回歸斜率。衡量趨勢方向與強度，是判斷燈號的主要依據。</p>
                         <p><strong>二階導數（加速度）：</strong>近 5 日斜率 vs 前 5 日斜率的差值。正值 = 同向加速（惡化擴大），負值 = 趨緩或反轉。「加速中的紅燈」比「趨緩的紅燈」危險得多。</p>
                         <p><strong>統計機率（極端程度）：</strong>過去 60 個交易日中，斜率達到當前絕對值的比例。0% = 歷史上從未出現過這麼極端的狀態；50% = 常見水準。用來判斷「這次是否不一樣」。</p>
@@ -4739,11 +4995,11 @@
                 const phase = s.phase || 'stable';
                 let accelHtml = '';
                 if (phase === 'accelerating') {
-                    accelHtml = `<span style="display:inline-flex;align-items:center;gap:2px;padding:1px 6px;border-radius:8px;font-size:0.65rem;font-weight:600;background:rgba(255,71,87,0.15);color:var(--red);">&#9650;&#9650; 加速</span>`;
+                    accelHtml = `<span class="risk-accel-badge risk-accel-accelerating">&#9650;&#9650; 加速</span>`;
                 } else if (phase === 'decelerating') {
-                    accelHtml = `<span style="display:inline-flex;align-items:center;gap:2px;padding:1px 6px;border-radius:8px;font-size:0.65rem;font-weight:600;background:rgba(0,196,140,0.15);color:var(--green);">&#9660; 趨緩</span>`;
+                    accelHtml = `<span class="risk-accel-badge risk-accel-decelerating">&#9660; 趨緩</span>`;
                 } else {
-                    accelHtml = `<span style="display:inline-flex;align-items:center;gap:2px;padding:1px 6px;border-radius:8px;font-size:0.65rem;font-weight:600;background:rgba(139,143,163,0.15);color:var(--text-muted);">&#8212; 持平</span>`;
+                    accelHtml = `<span class="risk-accel-badge risk-accel-stable">&#8212; 持平</span>`;
                 }
 
                 // Extremity probability
@@ -4755,23 +5011,23 @@
                     extHtml = `<span style="font-size:0.7rem;color:${extColor};">近60日僅 ${ext}% 達此水準（${extLabel}）</span>`;
                 }
 
-                return `<div style="background:var(--card); border-radius:10px; border:1px solid var(--border); padding:1rem 1.25rem; display:flex; flex-direction:column; gap:0.5rem; cursor:pointer; transition:border-color 0.2s;" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'" onclick="_p8ShowDetail('${s.key}')">
-                    <div style="display:flex; justify-content:space-between; align-items:center;">
-                        <div style="display:flex; align-items:center; gap:0.5rem;">
-                            <span style="color:${signalColor}; font-size:1.1rem;">${signalIcon}</span>
-                            <span style="font-weight:600; font-size:0.95rem;">${s.name}</span>
+                return `<div class="risk-signal-card" onclick="_p8ShowDetail('${s.key}')">
+                    <div class="risk-signal-header">
+                        <div class="risk-signal-name">
+                            <span class="risk-signal-icon" style="color:${signalColor};">${signalIcon}</span>
+                            <span class="risk-signal-title">${s.name}</span>
                             ${accelHtml}
                         </div>
-                        <span style="font-size:1.1rem; font-weight:700; color:${signalColor};">${valStr}</span>
+                        <span class="risk-signal-value" style="color:${signalColor};">${valStr}</span>
                     </div>
-                    <div style="display:flex; justify-content:space-between; align-items:flex-end;">
-                        <div style="font-size:0.8rem; color:var(--text-muted); line-height:1.6; flex:1;">
+                    <div class="risk-signal-body">
+                        <div class="risk-signal-desc">
                             ${s.desc}${extHtml ? '<br>' + extHtml : ''}<br>
-                            <span style="font-size:0.72rem; opacity:0.6;">${s.theory || ''}</span>
+                            <span class="risk-signal-theory">${s.theory || ''}</span>
                         </div>
-                        <div style="flex-shrink:0; margin-left:0.75rem;">${sparkHtml}</div>
+                        <div class="risk-signal-spark">${sparkHtml}</div>
                     </div>
-                    <div style="text-align:right;font-size:0.7rem;color:var(--text-muted);opacity:0.5;">點擊查看詳情</div>
+                    <div class="risk-signal-hint">點擊查看詳情</div>
                 </div>`;
             }).join('');
         }
@@ -4829,7 +5085,7 @@
                     <div style="font-size:0.85rem;color:var(--text-secondary);line-height:1.6;">${sig.theory || ''}</div>
                 </div>
 
-                <div style="background:var(--bg);border-radius:8px;padding:1rem;margin-bottom:1.5rem;overflow:hidden;">
+                <div class="risk-modal-chart">
                     ${bigSpark}
                     <div style="display:flex;justify-content:space-between;font-size:0.7rem;color:var(--text-muted);margin-top:0.25rem;">
                         <span>${histData.length > 0 ? histData[0].date : ''}</span>
@@ -4837,18 +5093,18 @@
                     </div>
                 </div>
 
-                <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:1rem;margin-bottom:1.5rem;">
-                    <div style="background:var(--bg);border-radius:8px;padding:0.75rem 1rem;text-align:center;">
+                <div class="risk-modal-kpis">
+                    <div class="risk-modal-kpi">
                         <div style="font-size:0.7rem;color:var(--text-muted);margin-bottom:0.25rem;">20日速度（一階導數）</div>
                         <div style="font-size:1.1rem;font-weight:700;color:${signalColor};">${sig.slope_20d >= 0 ? '+' : ''}${sig.slope_20d}</div>
                         <div style="font-size:0.7rem;color:var(--text-muted);">每日平均變化</div>
                     </div>
-                    <div style="background:var(--bg);border-radius:8px;padding:0.75rem 1rem;text-align:center;">
+                    <div class="risk-modal-kpi">
                         <div style="font-size:0.7rem;color:var(--text-muted);margin-bottom:0.25rem;">加速度（二階導數）</div>
                         <div style="font-size:1.1rem;font-weight:700;">${sig.accel >= 0 ? '+' : ''}${sig.accel}</div>
                         <div style="font-size:0.7rem;color:var(--text-muted);">${phaseMap[sig.phase] || sig.phase}</div>
                     </div>
-                    <div style="background:var(--bg);border-radius:8px;padding:0.75rem 1rem;text-align:center;">
+                    <div class="risk-modal-kpi">
                         <div style="font-size:0.7rem;color:var(--text-muted);margin-bottom:0.25rem;">歷史極端程度</div>
                         <div style="font-size:1.1rem;font-weight:700;">${sig.extremity_pct != null ? sig.extremity_pct + '%' : 'N/A'}</div>
                         <div style="font-size:0.7rem;">${extDesc}</div>
