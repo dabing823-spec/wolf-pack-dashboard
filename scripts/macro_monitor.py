@@ -39,8 +39,9 @@ HEADERS = {
 # ── Phase 2: 警報門檻 ──
 ALERT_THRESHOLDS = {
     'vix': {
-        'high': 30, 'low': 15,
-        'high_msg': '⚠️ VIX 突破 30 — 市場恐慌升溫',
+        'panic': 30, 'fear': 23, 'low': 15,
+        'panic_msg': '🔴 VIX 突破 30 — 市場已在恐慌中',
+        'fear_msg': '⚠️ VIX 突破 23 — 恐慌開始加速',
         'low_msg': '💤 VIX 跌破 15 — 市場過度樂觀，留意反轉',
     },
     'dxy': {
@@ -179,12 +180,14 @@ def check_alerts(indices):
     """Phase 2: Check thresholds and return alert messages."""
     alerts = []
 
-    # VIX level alerts
+    # VIX level alerts (23=恐慌加速, 30=已在恐慌中)
     vix = indices.get('vix')
     if vix is not None:
         t = ALERT_THRESHOLDS['vix']
-        if vix >= t['high']:
-            alerts.append(f"{t['high_msg']} (VIX={vix})")
+        if vix >= t['panic']:
+            alerts.append(f"{t['panic_msg']} (VIX={vix})")
+        elif vix >= t['fear']:
+            alerts.append(f"{t['fear_msg']} (VIX={vix})")
         elif vix <= t['low']:
             alerts.append(f"{t['low_msg']} (VIX={vix})")
 
@@ -276,7 +279,7 @@ def generate_brief(indices):
         return ""
 
     vix = indices.get('vix', '-')
-    vix_level = '恐慌' if vix != '-' and vix >= 30 else '偏高' if vix != '-' and vix >= 20 else '正常' if vix != '-' and vix >= 15 else '低波動'
+    vix_level = '恐慌中' if vix != '-' and vix >= 30 else '恐慌加速' if vix != '-' and vix >= 23 else '偏高' if vix != '-' and vix >= 20 else '正常' if vix != '-' and vix >= 15 else '低波動'
 
     fg = indices.get('fear_greed', '-')
     fg_map = {'extreme fear': '極度恐懼', 'fear': '恐懼', 'neutral': '中性', 'greed': '貪婪', 'extreme greed': '極度貪婪'}
