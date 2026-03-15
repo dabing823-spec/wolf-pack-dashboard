@@ -2612,7 +2612,6 @@
                     const ratingMap = { 'Extreme Fear': '極度恐懼', 'Fear': '恐懼', 'Neutral': '中性', 'Greed': '貪婪', 'Extreme Greed': '極度貪婪' };
                     document.getElementById('p2-idx-feargreed-sub').textContent = ratingMap[rating] || rating || '-';
                 }
-            }
 
                 // ── Global Macro: DXY, Oil, Gold, US 10Y ──
                 const macroItems = [
@@ -2631,11 +2630,7 @@
                         const chg = mi[item.key + '_chg'];
                         const chgPct = mi[item.key + '_chg_pct'];
                         if (chg != null && chgPct != null) {
-                            // For VIX/US10Y: rising = risk, use red; for others: rising = green per Taiwan convention
-                            const isInverse = (item.key === 'us10y');
-                            const color = isInverse
-                                ? (chg >= 0 ? UP_COLOR : DOWN_COLOR)
-                                : (chg >= 0 ? UP_COLOR : DOWN_COLOR);
+                            const color = chg >= 0 ? UP_COLOR : DOWN_COLOR;
                             el.style.color = color;
                             subEl.textContent = `${chg >= 0 ? '+' : ''}${chg.toFixed(2)} (${chgPct >= 0 ? '+' : ''}${chgPct.toFixed(2)}%)`;
                             subEl.style.color = color;
