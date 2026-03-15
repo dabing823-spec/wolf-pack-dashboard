@@ -853,6 +853,8 @@
                     <div class="kpi-label">今日申贖</div>
                     <div class="kpi-value" id="p1-kpi-units">-</div>
                     <div class="kpi-subtext" id="p1-kpi-units-desc">-</div>
+                    <div id="p1-kpi-units-trend" style="margin-top:0.5rem; display:flex; gap:2px; align-items:flex-end; height:24px;"></div>
+                    <div class="kpi-subtext" id="p1-kpi-units-extra" style="margin-top:0.3rem;">-</div>
                 </div>
                 <div class="kpi-card">
                     <div class="kpi-label">攻防模式</div>
@@ -1848,21 +1850,67 @@
             const cashSeries = cashMode.cash_series || dashboardData.cash_series || [];
             const latestCS = cashSeries.length ? cashSeries[cashSeries.length - 1] : {};
             const unitsChange = latestCS.units_change || 0;
-            const unitsChangeK = Math.round(unitsChange / 1000);
             const unitsEl = document.getElementById('p1-kpi-units');
+
+            // Format with appropriate unit (億/百萬)
+            const absChange = Math.abs(unitsChange);
+            let unitsText;
+            if (absChange >= 1e8) {
+                unitsText = (unitsChange / 1e8).toFixed(1) + ' 億';
+            } else if (absChange >= 1e6) {
+                unitsText = (unitsChange / 1e6).toFixed(0) + ' 百萬';
+            } else if (absChange > 0) {
+                unitsText = (unitsChange / 1e4).toFixed(0) + ' 萬';
+            } else {
+                unitsText = '0';
+            }
             if (unitsChange > 0) {
-                unitsEl.textContent = `+${(unitsChangeK).toLocaleString()} 千張`;
+                unitsEl.textContent = '+' + unitsText;
                 unitsEl.style.color = 'var(--green)';
             } else if (unitsChange < 0) {
-                unitsEl.textContent = `${(unitsChangeK).toLocaleString()} 千張`;
+                unitsEl.textContent = unitsText;
                 unitsEl.style.color = 'var(--red)';
             } else {
                 unitsEl.textContent = '0';
                 unitsEl.style.color = 'var(--text-muted)';
             }
-            const totalUnitsB = latestCS.units ? (latestCS.units / 1e9).toFixed(2) : '?';
+
+            // Fund size estimate
+            const totalUnits = latestCS.units || 0;
+            const nav = latestCS.nav || 0;
+            const fundSize = totalUnits * nav;
+            const fundSizeText = fundSize > 0 ? `規模 ${(fundSize / 1e9).toFixed(1)} 億` : '';
             document.getElementById('p1-kpi-units-desc').textContent =
-                `總單位: ${totalUnitsB}B | NAV: ${latestCS.nav || '-'}`;
+                `NAV: ${nav || '-'} | ${fundSizeText}`;
+
+            // Mini bar chart: last 10 days subscription/redemption
+            const trendEl = document.getElementById('p1-kpi-units-trend');
+            const last10 = cashSeries.slice(-10);
+            const maxAbs = Math.max(...last10.map(d => Math.abs(d.units_change || 0)), 1);
+            trendEl.innerHTML = last10.map(d => {
+                const uc = d.units_change || 0;
+                const h = Math.max(Math.round(Math.abs(uc) / maxAbs * 20), 1);
+                const color = uc > 0 ? 'rgba(0,196,140,0.7)' : uc < 0 ? 'rgba(255,71,87,0.7)' : 'rgba(128,128,128,0.3)';
+                return `<div title="${d.date}: ${(uc/1e6).toFixed(1)}M" style="width:6px;height:${h}px;background:${color};border-radius:1px;"></div>`;
+            }).join('');
+
+            // Consecutive days & 5-day net
+            const recent = cashSeries.slice(-5);
+            const net5d = recent.reduce((s, d) => s + (d.units_change || 0), 0);
+            let streak = 0;
+            for (let i = cashSeries.length - 1; i >= 0; i--) {
+                const uc = cashSeries[i].units_change || 0;
+                if (i === cashSeries.length - 1) {
+                    streak = uc >= 0 ? 1 : -1;
+                } else if ((uc > 0 && streak > 0) || (uc < 0 && streak < 0)) {
+                    streak += streak > 0 ? 1 : -1;
+                } else {
+                    break;
+                }
+            }
+            const streakText = Math.abs(streak) >= 2 ? ` | 連${Math.abs(streak)}日${streak > 0 ? '申購' : '贖回'}` : '';
+            const net5dText = net5d !== 0 ? `5日淨: ${net5d > 0 ? '+' : ''}${(net5d/1e6).toFixed(0)}M` : '5日淨: 0';
+            document.getElementById('p1-kpi-units-extra').textContent = net5dText + streakText;
 
             const modeClass = getModeClass(cashMode.mode);
             document.getElementById('p1-kpi-mode').innerHTML = `<span class="mode-indicator ${modeClass}">${cashMode.mode || '-'}</span>`;
